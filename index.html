@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>HybriLink - Portail Admin</title>
+   <!-- PWA Meta Tags -->
+    <meta name="application-name" content="hybrilink Secrétariat">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="hybrilink Sec">
+    <meta name="description" content="Gestion scolaire complète">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#3498db">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="theme-color" content="#3498db">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; --gold: #D4AF37; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 10px 0; }
+        .navbar-brand { color: white !important; font-weight: bold; }
+        
+        .menu-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 15px; min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .menu-card:hover { transform: translateY(-10px); box-shadow: 0 20px 30px rgba(0,0,0,0.15); }
+        .menu-icon { font-size: 40px; color: var(--primary-blue); margin-bottom: 10px; }
+        .menu-title { font-size: 16px; font-weight: 700; color: var(--primary-blue); }
+        
+        .content-panel { background: white; border-radius: 20px; padding: 30px; margin-top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; }
+        .content-panel.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn-action { background: var(--primary-blue); color: white; border: none; padding: 10px 20px; border-radius: 10px; transition: all 0.3s; }
+        .btn-action:hover { background: var(--dark-blue); transform: translateY(-2px); }
+        .btn-warning-custom { background: var(--accent-yellow); color: var(--primary-blue); border: none; }
+        .btn-danger-custom { background: #dc3545; color: white; border: none; }
+        .btn-success-custom { background: #28a745; color: white; border: none; }
+        
+        .home-btn { background: var(--accent-yellow); color: var(--primary-blue); border: none; padding: 8px 20px; border-radius: 25px; font-weight: bold; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .home-btn:hover { background: #ff9800; transform: translateY(-2px); }
+        
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        
+        .table-responsive { margin-top: 20px; overflow-x: auto; }
+        
+        .info-text {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #888;
+        }
+        
+        .info-text i { color: #003366; }
+        
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
+        
+        .badge-matricule { background: var(--accent-yellow); color: var(--primary-blue); font-weight: bold; padding: 5px 10px; border-radius: 20px; font-size: 14px; }
+        
+        .excel-upload-area { border: 2px dashed #003366; border-radius: 15px; padding: 30px; text-align: center; background: #f8f9fa; cursor: pointer; transition: all 0.3s; }
+        .excel-upload-area:hover { border-color: #ffb347; background: #fff8e1; }
+        
+        .list-group-item-custom { border: none; padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; background: #f8f9fa; transition: all 0.3s; }
+        .list-group-item-custom:hover { background: #e9ecef; transform: translateX(5px); }
+        
+        .form-section { background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        
+        .section-title { color: var(--primary-blue); font-weight: 700; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-yellow); }
+        
+        .counter-badge { background: var(--primary-blue); color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#" id="homeBrand"><i class="bi bi-heart-fill"></i> HybriLink - Administration Mariage</a>
+            <div>
+                <button class="btn btn-outline-light" onclick="window.location.href='invite.html'"><i class="bi bi-people-fill"></i> Portail Invité</button>
+                <button class="btn btn-outline-light ms-2" onclick="window.location.href='protocole.html'"><i class="bi bi-shield-check"></i> Portail Protocole</button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div id="toastContainer" class="toast-notification"></div>
+        
+        <div id="homePage">
+            <h4 class="text-center mb-4" style="color: var(--primary-blue);"><i class="bi bi-gear-fill"></i> Administration HybriLink</h4>
+            <div class="row">
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="table"><div class="menu-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div><div class="menu-title">Tables</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="protocole"><div class="menu-icon"><i class="bi bi-shield-fill-check"></i></div><div class="menu-title">Protocole</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="invite"><div class="menu-icon"><i class="bi bi-people-fill"></i></div><div class="menu-title">Invités</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="famille"><div class="menu-icon"><i class="bi bi-house-heart-fill"></i></div><div class="menu-title">Familles</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="parente"><div class="menu-icon"><i class="bi bi-diagram-3-fill"></i></div><div class="menu-title">Parenté</div></div></div>
+            </div>
+        </div>
+        
+        <!-- Panel Tables -->
+        <div id="panel-table" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-grid-3x3-gap-fill me-2"></i>Gestion des Tables</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Table</h5>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Nom de la table</label>
+                        <input type="text" class="form-control" id="tableNom" placeholder="Ex: Table d'honneur">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Nombre d'occupation</label>
+                        <input type="number" class="form-control" id="tableOccupation" min="1" value="8">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Famille</label>
+                        <select class="form-select" id="tableFamille">
+                            <option value="">Sélectionner une famille</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Parenté</label>
+                        <select class="form-select" id="tableParente">
+                            <option value="">Sélectionner une parenté</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1 mb-3 d-flex align-items-end">
+                        <button class="btn-action w-100" id="btnCreerTable"><i class="bi bi-check-lg"></i> Valider</button>
+                    </div>
+                </div>
+            </div>
+            <div id="tablesListe">
+                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune table créée</p></div>
+            </div>
+        </div>
+        
+        <!-- Panel Protocole -->
+        <div id="panel-protocole" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-shield-fill-check me-2"></i>Gestion du Protocole</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Ajouter un Protocole</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" id="protocoleNom" placeholder="Nom complet">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Genre</label>
+                        <select class="form-select" id="protocoleGenre">
+                            <option value="">Sélectionner</option>
+                            <option value="M">Masculin</option>
+                            <option value="F">Féminin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Téléphone</label>
+                        <input type="tel" class="form-control" id="protocoleTelephone" placeholder="Téléphone">
+                    </div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button class="btn-action w-100" id="btnCreerProtocole"><i class="bi bi-check-lg"></i> Valider</button>
+                    </div>
+                </div>
+            </div>
+            <div id="protocolesListe">
+                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun protocole créé</p></div>
+            </div>
+        </div>
+        
+        <!-- Panel Invités -->
+        <div id="panel-invite" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-people-fill me-2"></i>Gestion des Invités</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            
+            <!-- Création Simple -->
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-person-plus"></i> Création Simple</h5>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" id="inviteNom" placeholder="Nom complet">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Téléphone</label>
+                        <input type="tel" class="form-control" id="inviteTelephone" placeholder="Téléphone">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Adresse</label>
+                        <input type="text" class="form-control" id="inviteAdresse" placeholder="Adresse">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Famille</label>
+                        <select class="form-select" id="inviteFamille">
+                            <option value="">Sélectionner</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Parenté</label>
+                        <select class="form-select" id="inviteParente">
+                            <option value="">Sélectionner</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-action" id="btnCreerInvite"><i class="bi bi-check-lg"></i> Valider et générer le matricule</button>
+            </div>
+            
+            <!-- Importation Excel -->
+            <div class="form-section mt-4">
+                <h5 class="section-title"><i class="bi bi-file-earmark-excel"></i> Création par Excel</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn-warning-custom btn" id="btnTelechargerModele"><i class="bi bi-download"></i> Télécharger le modèle Excel</button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="excel-upload-area" id="excelUploadArea">
+                            <i class="bi bi-cloud-upload" style="font-size: 48px; color: #003366;"></i>
+                            <p>Cliquez ou glissez votre fichier Excel ici</p>
+                            <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                <div id="excelPreview" class="mt-3" style="display: none;">
+                    <h6>Aperçu du fichier :</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="excelPreviewTable">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <button class="btn-action" id="btnValiderExcel"><i class="bi bi-check-all"></i> Valider l'importation</button>
+                    <button class="btn-danger-custom btn ms-2" id="btnAnnulerExcel"><i class="bi bi-x-lg"></i> Annuler</button>
+                </div>
+            </div>
+            
+            <!-- Liste des invités -->
+            <div class="mt-4">
+                <h5 class="section-title"><i class="bi bi-list-ul"></i> Liste des Invités <span class="counter-badge" id="inviteCount">0</span></h5>
+                <div id="invitesListe">
+                    <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun invité</p></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel Familles -->
+        <div id="panel-famille" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-house-heart-fill me-2"></i>Gestion des Familles</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Famille</h5>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Nom de la famille</label>
+                        <input type="text" class="form-control" id="familleNom" placeholder="Nom de la famille">
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button class="btn-action w-100" id="btnCreerFamille"><i class="bi bi-check-lg"></i> Valider</button>
+                    </div>
+                </div>
+            </div>
+            <div id="famillesListe">
+                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune famille créée</p></div>
+            </div>
+        </div>
+        
+        <!-- Panel Parenté -->
+        <div id="panel-parente" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-diagram-3-fill me-2"></i>Gestion des Catégories de Parenté</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Catégorie</h5>
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label class="form-label">Nom de la catégorie</label>
+                        <input type="text" class="form-control" id="parenteNom" placeholder="Ex: Oncle, Tante, Cousin...">
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button class="btn-action w-100" id="btnCreerParente"><i class="bi bi-check-lg"></i> Valider</button>
+                    </div>
+                </div>
+            </div>
+            <div id="parentesListe">
+                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune catégorie créée</p></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-text">
+        <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire digital<br>
+        <small>Application de gestion des invitations mariage</small>
+    </div>
+
+    <script>
+        // ========== CONFIGURATION FIREBASE ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOGgIg1DptCLdLh27IVkIM6WqTodVYgYY",
+            authDomain: "invitation-nuptiale.firebaseapp.com",
+            projectId: "invitation-nuptiale",
+            storageBucket: "invitation-nuptiale.firebasestorage.app",
+            messagingSenderId: "974590314915",
+            appId: "1:974590314915:web:c96fe6e8a5b731a375b216",
+            measurementId: "G-YKLXH4NJ4E"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        db.enablePersistence({ synchronizeTabs: true })
+            .then(() => console.log('✅ Persistance Firestore activée'))
+            .catch((err) => console.warn('⚠️ Persistance non activée:', err.code));
+        
+        // ========== VARIABLES GLOBALES ==========
+        let allFamilles = [];
+        let allParentes = [];
+        let allInvites = [];
+        let allTables = [];
+        let allProtocoles = [];
+        let excelData = [];
+        
+        // ========== FONCTIONS UTILITAIRES ==========
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : '#dc3545');
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill');
+            const toastHtml = `<div class="toast notification-toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px;">
+                <div class="toast-body"><div style="display: flex; align-items: flex-start;"><i class="bi bi-${icon} me-2" style="font-size: 20px;"></i><div>${message}</div></div></div></div>`;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => {
+                const firstToast = container.firstElementChild;
+                if (firstToast) { firstToast.style.transition = 'opacity 0.3s'; firstToast.style.opacity = '0'; setTimeout(() => firstToast.remove(), 300); }
+            }, 5000);
+        }
+        
+        function goHome() { 
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('homePage').style.display = 'block'; 
+        }
+        
+        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        function genererMatricule() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+        
+        async function genererMatriculeUnique(collection) {
+            let matricule;
+            let isUnique = false;
+            let attempts = 0;
+            while (!isUnique && attempts < 100) {
+                matricule = genererMatricule();
+                const snapshot = await db.collection(collection).where('matricule', '==', matricule).get();
+                if (snapshot.empty) isUnique = true;
+                attempts++;
+            }
+            return matricule;
+        }
+        
+        // ========== CHARGEMENT DES DONNÉES ==========
+        async function chargerToutesLesDonnees() {
+            try {
+                const famillesSnap = await db.collection('familles').get();
+                allFamilles = [];
+                famillesSnap.forEach(doc => allFamilles.push({ id: doc.id, ...doc.data() }));
+                
+                const parentesSnap = await db.collection('parentes').get();
+                allParentes = [];
+                parentesSnap.forEach(doc => allParentes.push({ id: doc.id, ...doc.data() }));
+                
+                const invitesSnap = await db.collection('invites').get();
+                allInvites = [];
+                invitesSnap.forEach(doc => allInvites.push({ id: doc.id, ...doc.data() }));
+                
+                const tablesSnap = await db.collection('tables').get();
+                allTables = [];
+                tablesSnap.forEach(doc => allTables.push({ id: doc.id, ...doc.data() }));
+                
+                const protocolesSnap = await db.collection('protocoles').get();
+                allProtocoles = [];
+                protocolesSnap.forEach(doc => allProtocoles.push({ id: doc.id, ...doc.data() }));
+                
+                console.log('✅ Toutes les données chargées');
+                updateAllSelects();
+                afficherToutesLesListes();
+            } catch (error) {
+                console.error('❌ Erreur chargement données:', error);
+            }
+        }
+        
+        function updateAllSelects() {
+            // Mise à jour des selects pour les familles
+            const familleSelects = ['tableFamille', 'inviteFamille'];
+            familleSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Sélectionner une famille</option>';
+                    allFamilles.forEach(f => {
+                        select.innerHTML += `<option value="${f.id}">${escapeHtml(f.nom)}</option>`;
+                    });
+                }
+            });
+            
+            // Mise à jour des selects pour les parentés
+            const parenteSelects = ['tableParente', 'inviteParente'];
+            parenteSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    select.innerHTML = '<option value="">Sélectionner une parenté</option>';
+                    allParentes.forEach(p => {
+                        select.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`;
+                    });
+                }
+            });
+        }
+        
+        function afficherToutesLesListes() {
+            afficherTables();
+            afficherProtocoles();
+            afficherInvites();
+            afficherFamilles();
+            afficherParentes();
+        }
+        
+        // ========== TABLES ==========
+        async function creerTable() {
+            const nom = document.getElementById('tableNom').value.trim();
+            const occupation = parseInt(document.getElementById('tableOccupation').value) || 8;
+            const familleId = document.getElementById('tableFamille').value;
+            const parenteId = document.getElementById('tableParente').value;
+            
+            if (!nom) { showToast('Veuillez entrer le nom de la table', 'warning'); return; }
+            
+            const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
+            const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
+            
+            try {
+                await db.collection('tables').add({
+                    nom: nom,
+                    occupation: occupation,
+                    familleId: familleId || '',
+                    familleNom: familleNom,
+                    parenteId: parenteId || '',
+                    parenteNom: parenteNom,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Table créée avec succès');
+                document.getElementById('tableNom').value = '';
+                document.getElementById('tableOccupation').value = '8';
+                document.getElementById('tableFamille').value = '';
+                document.getElementById('tableParente').value = '';
+                chargerToutesLesDonnees();
+            } catch (error) {
+                console.error('Erreur création table:', error);
+                showToast('Erreur lors de la création de la table', 'error');
+            }
+        }
+        
+        function afficherTables() {
+            const container = document.getElementById('tablesListe');
+            if (!container) return;
+            
+            if (allTables.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune table créée</p></div>';
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Nom de la table</th><th>Occupation</th><th>Famille</th><th>Parenté</th><th>Actions</th></tr></thead><tbody>';
+            allTables.forEach(t => {
+                html += `<tr>
+                    <td><strong>${escapeHtml(t.nom)}</strong></td>
+                    <td><span class="badge bg-info">${t.occupation} places</span></td>
+                    <td>${escapeHtml(t.familleNom || '-')}</td>
+                    <td>${escapeHtml(t.parenteNom || '-')}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="supprimerTable('${t.id}')"><i class="bi bi-trash"></i></button></td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        async function supprimerTable(id) {
+            if (confirm('Voulez-vous vraiment supprimer cette table ?')) {
+                await db.collection('tables').doc(id).delete();
+                showToast('Table supprimée');
+                chargerToutesLesDonnees();
+            }
+        }
+        
+        // ========== PROTOCOLES ==========
+        async function creerProtocole() {
+            const nom = document.getElementById('protocoleNom').value.trim();
+            const genre = document.getElementById('protocoleGenre').value;
+            const telephone = document.getElementById('protocoleTelephone').value.trim();
+            
+            if (!nom) { showToast('Veuillez entrer le nom complet', 'warning'); return; }
+            if (!genre) { showToast('Veuillez sélectionner le genre', 'warning'); return; }
+            if (!telephone) { showToast('Veuillez entrer le téléphone', 'warning'); return; }
+            
+            const matricule = await genererMatriculeUnique('protocoles');
+            
+            try {
+                await db.collection('protocoles').add({
+                    nomComplet: nom,
+                    genre: genre,
+                    telephone: telephone,
+                    matricule: matricule,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast(`✅ Protocole créé - Matricule: ${matricule}`);
+                document.getElementById('protocoleNom').value = '';
+                document.getElementById('protocoleGenre').value = '';
+                document.getElementById('protocoleTelephone').value = '';
+                chargerToutesLesDonnees();
+            } catch (error) {
+                console.error('Erreur création protocole:', error);
+                showToast('Erreur lors de la création du protocole', 'error');
+            }
+        }
+        
+        function afficherProtocoles() {
+            const container = document.getElementById('protocolesListe');
+            if (!container) return;
+            
+            if (allProtocoles.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun protocole créé</p></div>';
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom complet</th><th>Genre</th><th>Téléphone</th><th>Actions</th></tr></thead><tbody>';
+            allProtocoles.forEach(p => {
+                html += `<tr>
+                    <td><span class="badge-matricule">${escapeHtml(p.matricule)}</span></td>
+                    <td><strong>${escapeHtml(p.nomComplet)}</strong></td>
+                    <td>${p.genre === 'M' ? '👨 Masculin' : '👩 Féminin'}</td>
+                    <td>${escapeHtml(p.telephone)}</td>
+                    <td><button class="btn btn-sm btn-danger" onclick="supprimerProtocole('${p.id}')"><i class="bi bi-trash"></i></button></td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        async function supprimerProtocole(id) {
+            if (confirm('Voulez-vous vraiment supprimer ce protocole ?')) {
+                await db.collection('protocoles').doc(id).delete();
+                showToast('Protocole supprimé');
+                chargerToutesLesDonnees();
+            }
+        }
+        
+        // ========== INVITÉS ==========
+        async function creerInvite() {
+            const nom = document.getElementById('inviteNom').value.trim();
+            const telephone = document.getElementById('inviteTelephone').value.trim();
+            const adresse = document.getElementById('inviteAdresse').value.trim();
+            const familleId = document.getElementById('inviteFamille').value;
+            const parenteId = document.getElementById('inviteParente').value;
+            
+            if (!nom) { showToast('Veuillez entrer le nom complet', 'warning'); return; }
+            
+            const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
+            const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
+            
+            const matricule = await genererMatriculeUnique('invites');
+            
+            try {
+                await db.collection('invites').add({
+                    nomComplet: nom,
+                    telephone: telephone,
+                    adresse: adresse,
+                    familleId: familleId || '',
+                    familleNom: familleNom,
+                    parenteId: parenteId || '',
+                    parenteNom: parenteNom,
+                    matricule: matricule,
+                    estValide: false,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast(`✅ Invité créé - Matricule: ${matricule}`);
+                document.getElementById('inviteNom').value = '';
+                document.getElementById('inviteTelephone').value = '';
+                document.getElementById('inviteAdresse').value = '';
+                document.getElementById('inviteFamille').value = '';
+                document.getElementById('inviteParente').value = '';
+                chargerToutesLesDonnees();
+            } catch (error) {
+                console.error('Erreur création invité:', error);
+                showToast('Erreur lors de la création de l\'invité', 'error');
+            }
+        }
+        
+        function afficherInvites() {
+            const container = document.getElementById('invitesListe');
+            const countBadge = document.getElementById('inviteCount');
+            if (!container) return;
+            
+            if (countBadge) countBadge.textContent = allInvites.length;
+            
+            if (allInvites.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun invité</p></div>';
+                return;
+            }
+            
+            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom complet</th><th>Téléphone</th><th>Famille</th><th>Parenté</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+            allInvites.forEach(inv => {
+                html += `<tr>
+                    <td><span class="badge-matricule">${escapeHtml(inv.matricule)}</span></td>
+                    <td><strong>${escapeHtml(inv.nomComplet)}</strong></td>
+                    <td>${escapeHtml(inv.telephone || '-')}</td>
+                    <td>${escapeHtml(inv.familleNom || '-')}</td>
+                    <td>${escapeHtml(inv.parenteNom || '-')}</td>
+                    <td><span class="badge ${inv.estValide ? 'bg-success' : 'bg-warning'}">${inv.estValide ? 'Entré' : 'En attente'}</span></td>
+                    <td><button class="btn btn-sm btn-danger" onclick="supprimerInvite('${inv.id}')"><i class="bi bi-trash"></i></button></td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        async function supprimerInvite(id) {
+            if (confirm('Voulez-vous vraiment supprimer cet invité ?')) {
+                await db.collection('invites').doc(id).delete();
+                showToast('Invité supprimé');
+                chargerToutesLesDonnees();
+            }
+        }
+        
+        // ========== IMPORTATION EXCEL ==========
+        function telechargerModeleExcel() {
+            const modele = [
+                ['Nom complet', 'Téléphone', 'Adresse', 'Famille', 'Parenté'],
+                ['Jean Dupont', '0123456789', '123 Rue de Paris', 'Famille Dupont', 'Ami'],
+                ['Marie Curie', '0987654321', '456 Avenue des Sciences', 'Famille Curie', 'Collègue']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(modele);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Invités');
+            XLSX.writeFile(wb, 'modele_invites_hybrilink.xlsx');
+            showToast('Modèle téléchargé avec succès');
+        }
+        
+        function gererFichierExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                
+                if (jsonData.length < 2) {
+                    showToast('Fichier vide ou invalide', 'error');
+                    return;
+                }
+                
+                const headers = jsonData[0];
+                excelData = [];
+                for (let i = 1; i < jsonData.length; i++) {
+                    const row = jsonData[i];
+                    if (row.length > 0 && row[0]) {
+                        excelData.push({
+                            nomComplet: row[0] || '',
+                            telephone: row[1] || '',
+                            adresse: row[2] || '',
+                            famille: row[3] || '',
+                            parente: row[4] || ''
+                        });
+                    }
+                }
+                
+                afficherApercuExcel(headers);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function afficherApercuExcel(headers) {
+            const previewDiv = document.getElementById('excelPreview');
+            const table = document.getElementById('excelPreviewTable');
+            
+            previewDiv.style.display = 'block';
+            
+            let headerHtml = '<tr><th>#</th>';
+            headers.forEach(h => headerHtml += `<th>${escapeHtml(h)}</th>`);
+            headerHtml += '</tr>';
+            table.querySelector('thead').innerHTML = headerHtml;
+            
+            let bodyHtml = '';
+            excelData.forEach((row, idx) => {
+                bodyHtml += `<tr><td>${idx + 1}</td><td>${escapeHtml(row.nomComplet)}</td><td>${escapeHtml(row.telephone)}</td><td>${escapeHtml(row.adresse)}</td><td>${escapeHtml(row.famille)}</td><td>${escapeHtml(row.parente)}</td></tr>`;
+            });
+            table.querySelector('tbody').innerHTML = bodyHtml;
+            
+            showToast(`${excelData.length} invités trouvés dans le fichier`, 'success');
+        }
+        
+        async function validerImportationExcel() {
+            if (excelData.length === 0) {
+                showToast('Aucune donnée à importer', 'warning');
+                return;
+            }
+            
+            let importes = 0;
+            for (const row of excelData) {
+                const matricule = await genererMatriculeUnique('invites');
+                await db.collection('invites').add({
+                    nomComplet: row.nomComplet,
+                    telephone: row.telephone,
+                    adresse: row.adresse,
+                    familleId: '',
+                    familleNom: row.famille,
+                    parenteId: '',
+                    parenteNom: row.parente,
+                    matricule: matricule,
+                    estValide: false,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                importes++;
+            }
+            
+            showToast(`✅ ${importes} invités importés avec succès`, 'success');
+            excelData = [];
+            document.getElementById('excelPreview').style.display = 'none';
+            document.getElementById('excelFileInput').value = '';
+            chargerToutesLesDonnees();
+        }
+        
+        // ========== FAMILLES ==========
+        async function creerFamille() {
+            const nom = document.getElementById('familleNom').value.trim();
+            if (!nom) { showToast('Veuillez entrer le nom de la famille', 'warning'); return; }
+            
+            try {
+                await db.collection('familles').add({
+                    nom: nom,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Famille créée avec succès');
+                document.getElementById('familleNom').value = '';
+                chargerToutesLesDonnees();
+            } catch (error) {
+                console.error('Erreur création famille:', error);
+                showToast('Erreur lors de la création de la famille', 'error');
+            }
+        }
+        
+        function afficherFamilles() {
+            const container = document.getElementById('famillesListe');
+            if (!container) return;
+            
+            if (allFamilles.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune famille créée</p></div>';
+                return;
+            }
+            
+            let html = '<div class="row">';
+            allFamilles.forEach(f => {
+                html += `<div class="col-md-3 col-sm-6 mb-3">
+                    <div class="list-group-item-custom d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-house-heart-fill me-2"></i><strong>${escapeHtml(f.nom)}</strong></span>
+                        <button class="btn btn-sm btn-danger" onclick="supprimerFamille('${f.id}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        async function supprimerFamille(id) {
+            if (confirm('Voulez-vous vraiment supprimer cette famille ?')) {
+                await db.collection('familles').doc(id).delete();
+                showToast('Famille supprimée');
+                chargerToutesLesDonnees();
+            }
+        }
+        
+        // ========== PARENTÉ ==========
+        async function creerParente() {
+            const nom = document.getElementById('parenteNom').value.trim();
+            if (!nom) { showToast('Veuillez entrer le nom de la catégorie', 'warning'); return; }
+            
+            try {
+                await db.collection('parentes').add({
+                    nom: nom,
+                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Catégorie créée avec succès');
+                document.getElementById('parenteNom').value = '';
+                chargerToutesLesDonnees();
+            } catch (error) {
+                console.error('Erreur création parenté:', error);
+                showToast('Erreur lors de la création de la catégorie', 'error');
+            }
+        }
+        
+        function afficherParentes() {
+            const container = document.getElementById('parentesListe');
+            if (!container) return;
+            
+            if (allParentes.length === 0) {
+                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune catégorie créée</p></div>';
+                return;
+            }
+            
+            let html = '<div class="row">';
+            allParentes.forEach(p => {
+                html += `<div class="col-md-3 col-sm-6 mb-3">
+                    <div class="list-group-item-custom d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-diagram-3-fill me-2"></i><strong>${escapeHtml(p.nom)}</strong></span>
+                        <button class="btn btn-sm btn-danger" onclick="supprimerParente('${p.id}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        async function supprimerParente(id) {
+            if (confirm('Voulez-vous vraiment supprimer cette catégorie ?')) {
+                await db.collection('parentes').doc(id).delete();
+                showToast('Catégorie supprimée');
+                chargerToutesLesDonnees();
+            }
+        }
+        
+        // ========== EVENT LISTENERS ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            chargerToutesLesDonnees();
+            
+            // Menu cards
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.getElementById('homePage').style.display = 'none';
+                    document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+                    const panel = document.getElementById(`panel-${card.dataset.menu}`);
+                    if (panel) panel.classList.add('active');
+                });
+            });
+            
+            // Home brand
+            document.getElementById('homeBrand')?.addEventListener('click', (e) => { e.preventDefault(); goHome(); });
+            
+            // Création table
+            document.getElementById('btnCreerTable')?.addEventListener('click', creerTable);
+            
+            // Création protocole
+            document.getElementById('btnCreerProtocole')?.addEventListener('click', creerProtocole);
+            
+            // Création invité simple
+            document.getElementById('btnCreerInvite')?.addEventListener('click', creerInvite);
+            
+            // Création famille
+            document.getElementById('btnCreerFamille')?.addEventListener('click', creerFamille);
+            
+            // Création parenté
+            document.getElementById('btnCreerParente')?.addEventListener('click', creerParente);
+            
+            // Téléchargement modèle Excel
+            document.getElementById('btnTelechargerModele')?.addEventListener('click', telechargerModeleExcel);
+            
+            // Upload Excel
+            document.getElementById('excelUploadArea')?.addEventListener('click', () => {
+                document.getElementById('excelFileInput').click();
+            });
+            
+            document.getElementById('excelFileInput')?.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    gererFichierExcel(e.target.files[0]);
+                }
+            });
+            
+            // Drag and drop Excel
+            document.getElementById('excelUploadArea')?.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            
+            document.getElementById('excelUploadArea')?.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files.length > 0) {
+                    gererFichierExcel(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Validation Excel
+            document.getElementById('btnValiderExcel')?.addEventListener('click', validerImportationExcel);
+            
+            // Annulation Excel
+            document.getElementById('btnAnnulerExcel')?.addEventListener('click', () => {
+                excelData = [];
+                document.getElementById('excelPreview').style.display = 'none';
+                document.getElementById('excelFileInput').value = '';
+            });
+        });
+        
+        // Écouteurs temps réel
+        db.collection('familles').onSnapshot(() => chargerToutesLesDonnees());
+        db.collection('parentes').onSnapshot(() => chargerToutesLesDonnees());
+        db.collection('invites').onSnapshot(() => chargerToutesLesDonnees());
+        db.collection('tables').onSnapshot(() => chargerToutesLesDonnees());
+        db.collection('protocoles').onSnapshot(() => chargerToutesLesDonnees());
+        
+        console.log('✅ HybriLink Admin - Prêt');
+    </script>
+
+   <script>
+        // Enregistrement du Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('firebase-messaging-sw.js')
+                    .then(reg => console.log('✅ Service Worker push enregistré:', reg.scope))
+                    .catch(err => console.log('❌ Erreur Service Worker push:', err));
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('✅ SW principal enregistré:', reg.scope))
+                    .catch(err => console.log('❌ Erreur SW principal:', err));
+            });
+        }
+        
+        console.log('🚀 Page de connexion parent - Redirection immédiate si déjà connecté');
+    </script>
+</body>
+</html>
