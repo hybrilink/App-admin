@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>HybriLink - Portail Admin</title>
-   <!-- PWA Meta Tags -->
-    <meta name="application-name" content="hybrilink Secrétariat">
+    <title>HybriLink · Admin</title>
+
+    <!-- PWA -->
+    <meta name="application-name" content="HybriLink Admin">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="hybrilink Sec">
-    <meta name="description" content="Gestion scolaire complète">
+    <meta name="apple-mobile-web-app-title" content="HybriLink Admin">
+    <meta name="description" content="Administration des invitations">
     <meta name="format-detection" content="telephone=no">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="msapplication-TileColor" content="#3498db">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="theme-color" content="#3498db">
+    <meta name="theme-color" content="#003366">
 
-    <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icon-167x167.png">
-
-    <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,122 +33,298 @@
         body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
         .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 10px 0; }
         .navbar-brand { color: white !important; font-weight: bold; }
-        
-        .menu-card { background: white; border-radius: 20px; padding: 25px 15px; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 15px; min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .menu-card {
+            background: white; border-radius: 20px; padding: 25px 15px; text-align: center;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 15px; min-height: 130px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
         .menu-card:hover { transform: translateY(-10px); box-shadow: 0 20px 30px rgba(0,0,0,0.15); }
         .menu-icon { font-size: 40px; color: var(--primary-blue); margin-bottom: 10px; }
         .menu-title { font-size: 16px; font-weight: 700; color: var(--primary-blue); }
-        
+
         .content-panel { background: white; border-radius: 20px; padding: 30px; margin-top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); display: none; }
         .content-panel.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
+
         .btn-action { background: var(--primary-blue); color: white; border: none; padding: 10px 20px; border-radius: 10px; transition: all 0.3s; }
         .btn-action:hover { background: var(--dark-blue); transform: translateY(-2px); }
         .btn-warning-custom { background: var(--accent-yellow); color: var(--primary-blue); border: none; }
         .btn-danger-custom { background: #dc3545; color: white; border: none; }
         .btn-success-custom { background: #28a745; color: white; border: none; }
-        
+        .btn-whatsapp { background: #25D366; color: white; border: none; }
+        .btn-whatsapp:hover { background: #1da851; color: white; transform: translateY(-2px); }
+
         .home-btn { background: var(--accent-yellow); color: var(--primary-blue); border: none; padding: 8px 20px; border-radius: 25px; font-weight: bold; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .home-btn:hover { background: #ff9800; transform: translateY(-2px); }
-        
+
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        
         .table-responsive { margin-top: 20px; overflow-x: auto; }
-        
-        .info-text {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 13px;
-            color: #888;
-        }
-        
+        .info-text { text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #888; }
         .info-text i { color: #003366; }
-        
+
         .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
-        
         .badge-matricule { background: var(--accent-yellow); color: var(--primary-blue); font-weight: bold; padding: 5px 10px; border-radius: 20px; font-size: 14px; }
-        
+
         .excel-upload-area { border: 2px dashed #003366; border-radius: 15px; padding: 30px; text-align: center; background: #f8f9fa; cursor: pointer; transition: all 0.3s; }
         .excel-upload-area:hover { border-color: #ffb347; background: #fff8e1; }
-        
+
         .list-group-item-custom { border: none; padding: 12px 15px; margin-bottom: 8px; border-radius: 10px; background: #f8f9fa; transition: all 0.3s; }
         .list-group-item-custom:hover { background: #e9ecef; transform: translateX(5px); }
-        
+
         .form-section { background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
-        
         .section-title { color: var(--primary-blue); font-weight: 700; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-yellow); }
-        
+
         .counter-badge { background: var(--primary-blue); color: white; padding: 3px 10px; border-radius: 15px; font-size: 12px; }
+        .whatsapp-preview { background: #f0f8f0; border-left: 4px solid #25D366; padding: 15px; border-radius: 10px; margin-top: 15px; }
+
+        .progress-bar-custom { height: 30px; border-radius: 15px; background: #e9ecef; overflow: hidden; margin-top: 15px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #25D366, #128C7E); transition: width 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; }
+
+        .invite-checkbox { transform: scale(1.2); margin-right: 10px; cursor: pointer; }
+
+        .plan-upload-area {
+            border: 2px dashed #4a90e2;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 150px;
+        }
+        .plan-upload-area:hover { border-color: #003366; background: #e8f0fe; }
+
+        #planApercuCanvas { width: 100%; height: auto; display: block; background: #f5f0ea; }
+
+        /* ===== MODAL SÉLECTEUR DE PLAN ===== */
+        .modal-selecteur {
+            position: fixed; inset: 0; z-index: 100000;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-selecteur-content {
+            background: white; border-radius: 20px; padding: 20px;
+            max-width: 95vw; max-height: 95vh;
+            overflow: hidden; position: relative;
+            display: flex; flex-direction: column;
+            width: 100%;
+        }
+        .modal-selecteur-img-wrapper {
+            position: relative; width: 100%; max-height: 70vh;
+            overflow: hidden; background: #f0ebe6;
+            border-radius: 12px; border: 2px solid #ddd;
+            cursor: crosshair; touch-action: none;
+        }
+        .modal-selecteur-point {
+            position: absolute; display: none; width: 30px; height: 30px;
+            background: rgba(255,0,0,0.9); border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 30px rgba(255,0,0,0.8), 0 0 80px rgba(255,0,0,0.3);
+            transform: translate(-50%, -50%); pointer-events: none;
+            z-index: 10; transition: none;
+        }
+        .modal-selecteur-point.active {
+            display: block !important;
+        }
+        .modal-selecteur-point.confirmed {
+            background: rgba(0,255,0,0.9) !important;
+            box-shadow: 0 0 30px rgba(0,255,0,0.8) !important;
+        }
+        .modal-selecteur-crosshair {
+            position: absolute; display: none; pointer-events: none; z-index: 9;
+        }
+        .modal-selecteur-crosshair .h {
+            position: absolute; width: 40px; height: 2px;
+            background: rgba(255,255,255,0.9);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .modal-selecteur-crosshair .v {
+            position: absolute; width: 2px; height: 40px;
+            background: rgba(255,255,255,0.9);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .modal-selecteur-crosshair .dot {
+            position: absolute; width: 6px; height: 6px;
+            background: rgba(255,0,0,0.8);
+            border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .modal-selecteur-zoom-container {
+            position: relative; width: 100%; height: 100%;
+            overflow: hidden; transform-origin: 0 0;
+        }
+        .modal-selecteur-zoom-container img {
+            display: block; width: 100%; height: auto;
+            pointer-events: none; user-select: none;
+        }
+        .modal-selecteur-zoom-container.dragging {
+            cursor: grabbing !important;
+        }
+        .zoom-controls {
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+        .zoom-controls .btn-zoom {
+            padding: 4px 12px; font-size: 14px; border: 1px solid #ddd;
+            background: white; border-radius: 6px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .zoom-controls .btn-zoom:hover { background: #e8f0fe; border-color: #4a90e2; }
+        .zoom-level {
+            font-family: monospace; background: #e8f0fe; padding: 4px 12px;
+            border-radius: 8px; font-size: 12px; color: #4a90e2;
+        }
+        .coords-display {
+            font-family: monospace; background: #f0f0f0; padding: 8px 16px;
+            border-radius: 8px; font-size: 14px; font-weight: 600; color: #333;
+            min-width: 220px; text-align: center;
+        }
+        .coords-display.highlight {
+            background: #e8f5e9; color: #2e7d32;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-custom">
         <div class="container">
-            <a class="navbar-brand" href="#" id="homeBrand"><i class="bi bi-heart-fill"></i> HybriLink - Administration Mariage</a>
+            <a class="navbar-brand" href="#" id="homeBrand"><i class="bi bi-heart-fill"></i> HybriLink - Administration</a>
             <div>
-                <button class="btn btn-outline-light" onclick="window.location.href='invite.html'"><i class="bi bi-people-fill"></i> Portail Invité</button>
-                <button class="btn btn-outline-light ms-2" onclick="window.location.href='protocole.html'"><i class="bi bi-shield-check"></i> Portail Protocole</button>
+                <button class="btn btn-outline-light" onclick="window.location.href='invite.html'"><i class="bi bi-people-fill"></i> Invité</button>
+                <button class="btn btn-outline-light ms-2" onclick="window.location.href='protocole.html'"><i class="bi bi-shield-check"></i> Protocole</button>
             </div>
         </div>
     </nav>
-    
+
     <div class="container mt-4">
         <div id="toastContainer" class="toast-notification"></div>
-        
+
         <div id="homePage">
             <h4 class="text-center mb-4" style="color: var(--primary-blue);"><i class="bi bi-gear-fill"></i> Administration HybriLink</h4>
             <div class="row">
                 <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="table"><div class="menu-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div><div class="menu-title">Tables</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="plan"><div class="menu-icon"><i class="bi bi-map-fill" style="color:#4a90e2;"></i></div><div class="menu-title">Plan salle</div></div></div>
                 <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="protocole"><div class="menu-icon"><i class="bi bi-shield-fill-check"></i></div><div class="menu-title">Protocole</div></div></div>
                 <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="invite"><div class="menu-icon"><i class="bi bi-people-fill"></i></div><div class="menu-title">Invités</div></div></div>
                 <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="famille"><div class="menu-icon"><i class="bi bi-house-heart-fill"></i></div><div class="menu-title">Familles</div></div></div>
                 <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="parente"><div class="menu-icon"><i class="bi bi-diagram-3-fill"></i></div><div class="menu-title">Parenté</div></div></div>
+                <div class="col-md-2 col-sm-4 col-6"><div class="menu-card" data-menu="publication" style="border: 2px solid #25D366;"><div class="menu-icon"><i class="bi bi-whatsapp" style="color: #25D366;"></i></div><div class="menu-title">📤 Publier</div></div></div>
             </div>
         </div>
-        
-        <!-- Panel Tables -->
+
+        <!-- ===== PANEL TABLES ===== -->
         <div id="panel-table" class="content-panel">
             <div class="panel-header">
                 <h4><i class="bi bi-grid-3x3-gap-fill me-2"></i>Gestion des Tables</h4>
                 <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
             </div>
             <div class="form-section">
-                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Table</h5>
+                <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer / Modifier une Table</h5>
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Nom de la table</label>
                         <input type="text" class="form-control" id="tableNom" placeholder="Ex: Table d'honneur">
                     </div>
                     <div class="col-md-2 mb-3">
-                        <label class="form-label">Nombre d'occupation</label>
+                        <label class="form-label">Occupation</label>
                         <input type="number" class="form-control" id="tableOccupation" min="1" value="8">
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Famille</label>
-                        <select class="form-select" id="tableFamille">
-                            <option value="">Sélectionner une famille</option>
-                        </select>
+                        <select class="form-select" id="tableFamille"><option value="">Sélectionner</option></select>
                     </div>
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Parenté</label>
-                        <select class="form-select" id="tableParente">
-                            <option value="">Sélectionner une parenté</option>
+                        <select class="form-select" id="tableParente"><option value="">Sélectionner</option></select>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <h6 class="section-title" style="font-size:14px; border-bottom-color:#4a90e2;">
+                            <i class="bi bi-geo-alt-fill" style="color:#4a90e2;"></i> Coordonnées indoor
+                        </h6>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Position X (%)</label>
+                        <input type="number" class="form-control" id="tablePosX" placeholder="0-100" min="0" max="100" step="0.5">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Position Y (%)</label>
+                        <input type="number" class="form-control" id="tablePosY" placeholder="0-100" min="0" max="100" step="0.5">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">Étage</label>
+                        <select class="form-select" id="tableEtage">
+                            <option value="rdc">RDC</option>
+                            <option value="etage1">Étage 1</option>
+                            <option value="etage2">Étage 2</option>
                         </select>
                     </div>
-                    <div class="col-md-1 mb-3 d-flex align-items-end">
-                        <button class="btn-action w-100" id="btnCreerTable"><i class="bi bi-check-lg"></i> Valider</button>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button class="btn btn-secondary w-100" id="btnOuvrirPlan" style="background:#4a90e2; color:white;">
+                            <i class="bi bi-eye"></i> Voir le plan & sélectionner
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <button class="btn-action" id="btnCreerTable"><i class="bi bi-check-lg"></i> Valider la table</button>
                     </div>
                 </div>
             </div>
             <div id="tablesListe">
-                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune table créée</p></div>
+                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune table créée</p></div>
             </div>
         </div>
-        
-        <!-- Panel Protocole -->
+
+        <!-- ===== PANEL PLAN ===== -->
+        <div id="panel-plan" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-map-fill me-2" style="color:#4a90e2;"></i>Plan de la salle</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-cloud-upload"></i> Télécharger le plan vers Cloudinary</h5>
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="plan-upload-area" id="planUploadArea">
+                            <i class="bi bi-image" style="font-size:48px; color:#4a90e2;"></i>
+                            <p>Cliquez ou glissez votre plan (PNG, JPG)</p>
+                            <input type="file" id="planFileInput" accept="image/*" style="display:none;">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div id="planPreviewContainer" style="display:none; text-align:center;">
+                            <img id="planPreviewImage" src="" alt="Plan" style="max-width:100%; max-height:200px; border-radius:10px; border:2px solid #4a90e2;">
+                            <p class="mt-2">
+                                <button class="btn btn-sm btn-danger" id="btnSupprimerPlan"><i class="bi bi-trash"></i> Supprimer</button>
+                            </p>
+                        </div>
+                        <div id="planAucun" style="text-align:center; padding:20px; background:#f8f9fa; border-radius:10px;">
+                            <i class="bi bi-image" style="font-size:32px; color:#ccc;"></i>
+                            <p class="text-muted">Aucun plan chargé</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-geo-alt"></i> Aperçu des tables</h5>
+                <div style="position:relative; width:100%; max-width:600px; margin:0 auto; border:2px solid #ddd; border-radius:10px; overflow:hidden; background:#f5f0ea;">
+                    <canvas id="planApercuCanvas" width="600" height="600"></canvas>
+                    <div id="planApercuOverlay" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#999;">
+                        <i class="bi bi-image" style="font-size:48px; display:block;"></i>
+                        <span>Chargez un plan</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-center">
+                    <button class="btn btn-sm btn-outline-secondary" id="btnRafraichirApercu"><i class="bi bi-arrow-clockwise"></i> Rafraîchir</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL PROTOCOLE ===== -->
         <div id="panel-protocole" class="content-panel">
             <div class="panel-header">
                 <h4><i class="bi bi-shield-fill-check me-2"></i>Gestion du Protocole</h4>
@@ -160,109 +333,52 @@
             <div class="form-section">
                 <h5 class="section-title"><i class="bi bi-plus-circle"></i> Ajouter un Protocole</h5>
                 <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Nom complet</label>
-                        <input type="text" class="form-control" id="protocoleNom" placeholder="Nom complet">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Genre</label>
-                        <select class="form-select" id="protocoleGenre">
-                            <option value="">Sélectionner</option>
-                            <option value="M">Masculin</option>
-                            <option value="F">Féminin</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Téléphone</label>
-                        <input type="tel" class="form-control" id="protocoleTelephone" placeholder="Téléphone">
-                    </div>
-                    <div class="col-md-2 mb-3 d-flex align-items-end">
-                        <button class="btn-action w-100" id="btnCreerProtocole"><i class="bi bi-check-lg"></i> Valider</button>
-                    </div>
+                    <div class="col-md-4 mb-3"><label class="form-label">Nom complet</label><input type="text" class="form-control" id="protocoleNom" placeholder="Nom complet"></div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Genre</label><select class="form-select" id="protocoleGenre"><option value="">Sélectionner</option><option value="M">Masculin</option><option value="F">Féminin</option></select></div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Téléphone</label><input type="tel" class="form-control" id="protocoleTelephone" placeholder="Téléphone"></div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end"><button class="btn-action w-100" id="btnCreerProtocole"><i class="bi bi-check-lg"></i> Valider</button></div>
                 </div>
             </div>
-            <div id="protocolesListe">
-                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun protocole créé</p></div>
-            </div>
+            <div id="protocolesListe"><div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun protocole</p></div></div>
         </div>
-        
-        <!-- Panel Invités -->
+
+        <!-- ===== PANEL INVITÉS ===== -->
         <div id="panel-invite" class="content-panel">
             <div class="panel-header">
                 <h4><i class="bi bi-people-fill me-2"></i>Gestion des Invités</h4>
                 <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
             </div>
-            
-            <!-- Création Simple -->
             <div class="form-section">
                 <h5 class="section-title"><i class="bi bi-person-plus"></i> Création Simple</h5>
                 <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Nom complet</label>
-                        <input type="text" class="form-control" id="inviteNom" placeholder="Nom complet">
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">Téléphone</label>
-                        <input type="tel" class="form-control" id="inviteTelephone" placeholder="Téléphone">
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <label class="form-label">Adresse</label>
-                        <input type="text" class="form-control" id="inviteAdresse" placeholder="Adresse">
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">Famille</label>
-                        <select class="form-select" id="inviteFamille">
-                            <option value="">Sélectionner</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mb-3">
-                        <label class="form-label">Parenté</label>
-                        <select class="form-select" id="inviteParente">
-                            <option value="">Sélectionner</option>
-                        </select>
-                    </div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Nom complet</label><input type="text" class="form-control" id="inviteNom" placeholder="Nom complet"></div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Téléphone</label><input type="tel" class="form-control" id="inviteTelephone" placeholder="Téléphone"></div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Adresse</label><input type="text" class="form-control" id="inviteAdresse" placeholder="Adresse"></div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Famille</label><select class="form-select" id="inviteFamille"><option value="">Sélectionner</option></select></div>
+                    <div class="col-md-2 mb-3"><label class="form-label">Parenté</label><select class="form-select" id="inviteParente"><option value="">Sélectionner</option></select></div>
                 </div>
                 <button class="btn-action" id="btnCreerInvite"><i class="bi bi-check-lg"></i> Valider et générer le matricule</button>
             </div>
-            
-            <!-- Importation Excel -->
-            <div class="form-section mt-4">
-                <h5 class="section-title"><i class="bi bi-file-earmark-excel"></i> Création par Excel</h5>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-file-earmark-excel"></i> Importation Excel</h5>
                 <div class="row">
-                    <div class="col-md-6">
-                        <button class="btn-warning-custom btn" id="btnTelechargerModele"><i class="bi bi-download"></i> Télécharger le modèle Excel</button>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="excel-upload-area" id="excelUploadArea">
-                            <i class="bi bi-cloud-upload" style="font-size: 48px; color: #003366;"></i>
-                            <p>Cliquez ou glissez votre fichier Excel ici</p>
-                            <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
-                        </div>
-                    </div>
+                    <div class="col-md-6"><button class="btn-warning-custom btn" id="btnTelechargerModele"><i class="bi bi-download"></i> Télécharger le modèle</button></div>
+                    <div class="col-md-6"><div class="excel-upload-area" id="excelUploadArea"><i class="bi bi-cloud-upload" style="font-size:48px; color:#003366;"></i><p>Cliquez ou glissez votre fichier Excel</p><input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none;"></div></div>
                 </div>
-                <div id="excelPreview" class="mt-3" style="display: none;">
-                    <h6>Aperçu du fichier :</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="excelPreviewTable">
-                            <thead></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <button class="btn-action" id="btnValiderExcel"><i class="bi bi-check-all"></i> Valider l'importation</button>
+                <div id="excelPreview" style="display:none;" class="mt-3">
+                    <h6>Aperçu :</h6>
+                    <div class="table-responsive"><table class="table table-bordered" id="excelPreviewTable"><thead></thead><tbody></tbody></table></div>
+                    <button class="btn-action" id="btnValiderExcel"><i class="bi bi-check-all"></i> Valider</button>
                     <button class="btn-danger-custom btn ms-2" id="btnAnnulerExcel"><i class="bi bi-x-lg"></i> Annuler</button>
                 </div>
             </div>
-            
-            <!-- Liste des invités -->
             <div class="mt-4">
                 <h5 class="section-title"><i class="bi bi-list-ul"></i> Liste des Invités <span class="counter-badge" id="inviteCount">0</span></h5>
-                <div id="invitesListe">
-                    <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun invité</p></div>
-                </div>
+                <div id="invitesListe"><div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun invité</p></div></div>
             </div>
         </div>
-        
-        <!-- Panel Familles -->
+
+        <!-- ===== PANEL FAMILLES ===== -->
         <div id="panel-famille" class="content-panel">
             <div class="panel-header">
                 <h4><i class="bi bi-house-heart-fill me-2"></i>Gestion des Familles</h4>
@@ -271,21 +387,14 @@
             <div class="form-section">
                 <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Famille</h5>
                 <div class="row">
-                    <div class="col-md-8 mb-3">
-                        <label class="form-label">Nom de la famille</label>
-                        <input type="text" class="form-control" id="familleNom" placeholder="Nom de la famille">
-                    </div>
-                    <div class="col-md-4 mb-3 d-flex align-items-end">
-                        <button class="btn-action w-100" id="btnCreerFamille"><i class="bi bi-check-lg"></i> Valider</button>
-                    </div>
+                    <div class="col-md-8 mb-3"><label class="form-label">Nom de la famille</label><input type="text" class="form-control" id="familleNom" placeholder="Nom"></div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end"><button class="btn-action w-100" id="btnCreerFamille"><i class="bi bi-check-lg"></i> Valider</button></div>
                 </div>
             </div>
-            <div id="famillesListe">
-                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune famille créée</p></div>
-            </div>
+            <div id="famillesListe"><div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune famille</p></div></div>
         </div>
-        
-        <!-- Panel Parenté -->
+
+        <!-- ===== PANEL PARENTÉ ===== -->
         <div id="panel-parente" class="content-panel">
             <div class="panel-header">
                 <h4><i class="bi bi-diagram-3-fill me-2"></i>Gestion des Catégories de Parenté</h4>
@@ -294,652 +403,1179 @@
             <div class="form-section">
                 <h5 class="section-title"><i class="bi bi-plus-circle"></i> Créer une Catégorie</h5>
                 <div class="row">
+                    <div class="col-md-8 mb-3"><label class="form-label">Nom</label><input type="text" class="form-control" id="parenteNom" placeholder="Ex: Oncle, Tante..."></div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end"><button class="btn-action w-100" id="btnCreerParente"><i class="bi bi-check-lg"></i> Valider</button></div>
+                </div>
+            </div>
+            <div id="parentesListe"><div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune catégorie</p></div></div>
+        </div>
+
+        <!-- ===== PANEL PUBLICATION ===== -->
+        <div id="panel-publication" class="content-panel">
+            <div class="panel-header">
+                <h4><i class="bi bi-whatsapp me-2" style="color:#25D366;"></i>Publication des Invitations</h4>
+                <button class="home-btn" onclick="goHome()"><i class="bi bi-house-door-fill"></i> Accueil</button>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-link-45deg"></i> Configuration</h5>
+                <div class="row">
                     <div class="col-md-8 mb-3">
-                        <label class="form-label">Nom de la catégorie</label>
-                        <input type="text" class="form-control" id="parenteNom" placeholder="Ex: Oncle, Tante, Cousin...">
+                        <label class="form-label">Lien de l'application</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-globe2"></i></span>
+                            <input type="url" class="form-control" id="appLien" value="https://invitation-nuptiale.web.app/invite.html">
+                            <button class="btn btn-outline-secondary" id="btnTestLien"><i class="bi bi-check-circle"></i> Tester</button>
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3 d-flex align-items-end">
-                        <button class="btn-action w-100" id="btnCreerParente"><i class="bi bi-check-lg"></i> Valider</button>
+                        <button class="btn btn-success w-100 btn-whatsapp" id="btnDiffuserGroupe"><i class="bi bi-whatsapp"></i> Diffuser à tous</button>
                     </div>
                 </div>
             </div>
-            <div id="parentesListe">
-                <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune catégorie créée</p></div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-eye"></i> Aperçu du message</h5>
+                <div class="whatsapp-preview" id="messagePreview">
+                    <p><strong>📱 Message WhatsApp :</strong></p>
+                    <div id="previewMessage" style="background:white; padding:15px; border-radius:10px; border:1px solid #ddd;">
+                        <p>🕌 <strong>Invitation au Mariage HybriLink</strong></p>
+                        <p>Bonjour [Nom de l'invité],</p>
+                        <p>Nous avons le plaisir de vous inviter à notre cérémonie de mariage.</p>
+                        <p>🔑 <strong>Votre matricule :</strong> [XXXX]</p>
+                        <p>📲 <strong>Lien d'accès :</strong> https://mon-site.com/invitation</p>
+                        <p>📍 <strong>Navigation :</strong> Cliquez sur "Navigation vers ma table" dans l'invitation</p>
+                        <p>Veuillez utiliser ce matricule pour accéder à votre espace personnel.</p>
+                        <p style="color:#666; font-size:12px; margin-top:10px;">💡 Ce message sera personnalisé pour chaque invité</p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-section">
+                <h5 class="section-title"><i class="bi bi-people-fill"></i> Sélection des invités <span class="counter-badge" id="selectedCount">0</span> <span class="counter-badge" style="background:#25D366;" id="totalInvitesCount">Total: 0</span></h5>
+                <div class="mb-3 d-flex gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-outline-success" id="btnSelectAll"><i class="bi bi-check-all"></i> Tout</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="btnDeselectAll"><i class="bi bi-x-circle"></i> Désélectionner</button>
+                    <button class="btn btn-sm btn-outline-info" id="btnSelectWithPhone"><i class="bi bi-phone"></i> Avec téléphone</button>
+                </div>
+                <div id="invitesSelectionListe" style="max-height:400px; overflow-y:auto;">
+                    <div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun invité</p></div>
+                </div>
+            </div>
+            <div id="progressContainer" style="display:none;">
+                <div class="progress-bar-custom"><div class="progress-fill" id="progressFill" style="width:0%;">0%</div></div>
+                <p class="text-center mt-2" id="progressStatus">Préparation...</p>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-success btn-whatsapp btn-lg w-100" id="btnLancerDiffusion"><i class="bi bi-whatsapp"></i> Lancer la diffusion</button>
+                <p class="text-center text-muted small mt-2"><i class="bi bi-info-circle"></i> WhatsApp Web s'ouvrira pour chaque invité</p>
             </div>
         </div>
     </div>
-    
+
     <div class="info-text">
         <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire digital<br>
         <small>Application de gestion des invitations mariage</small>
     </div>
 
     <script>
-        // ========== CONFIGURATION FIREBASE ==========
-        const firebaseConfig = {
-            apiKey: "AIzaSyDOGgIg1DptCLdLh27IVkIM6WqTodVYgYY",
-            authDomain: "invitation-nuptiale.firebaseapp.com",
-            projectId: "invitation-nuptiale",
-            storageBucket: "invitation-nuptiale.firebasestorage.app",
-            messagingSenderId: "974590314915",
-            appId: "1:974590314915:web:c96fe6e8a5b731a375b216",
-            measurementId: "G-YKLXH4NJ4E"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        
-        db.enablePersistence({ synchronizeTabs: true })
-            .then(() => console.log('✅ Persistance Firestore activée'))
-            .catch((err) => console.warn('⚠️ Persistance non activée:', err.code));
-        
-        // ========== VARIABLES GLOBALES ==========
-        let allFamilles = [];
-        let allParentes = [];
-        let allInvites = [];
-        let allTables = [];
-        let allProtocoles = [];
-        let excelData = [];
-        
-        // ========== FONCTIONS UTILITAIRES ==========
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : '#dc3545');
-            const textColor = type === 'warning' ? '#333' : 'white';
-            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill');
-            const toastHtml = `<div class="toast notification-toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px;">
-                <div class="toast-body"><div style="display: flex; align-items: flex-start;"><i class="bi bi-${icon} me-2" style="font-size: 20px;"></i><div>${message}</div></div></div></div>`;
-            container.insertAdjacentHTML('afterbegin', toastHtml);
-            setTimeout(() => {
-                const firstToast = container.firstElementChild;
-                if (firstToast) { firstToast.style.transition = 'opacity 0.3s'; firstToast.style.opacity = '0'; setTimeout(() => firstToast.remove(), 300); }
-            }, 5000);
+    // =============================================================
+    // FIREBASE CONFIG
+    // =============================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyDOGgIg1DptCLdLh27IVkIM6WqTodVYgYY",
+        authDomain: "invitation-nuptiale.firebaseapp.com",
+        projectId: "invitation-nuptiale",
+        storageBucket: "invitation-nuptiale.firebasestorage.app",
+        messagingSenderId: "974590314915",
+        appId: "1:974590314915:web:c96fe6e8a5b731a375b216"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+
+    // =============================================================
+    // CONFIGURATION CLOUDINARY
+    // =============================================================
+    const CLOUDINARY_CONFIG = {
+        cloudName: 'diwn8sxtn',
+        uploadPreset: 'cs_lacolombe'
+    };
+
+    // =============================================================
+    // VARIABLES
+    // =============================================================
+    let allFamilles = [], allParentes = [], allInvites = [], allTables = [], allProtocoles = [];
+    let selectedInvites = new Set();
+    let excelData = [];
+    let planUrl = null;
+    let planImage = null;
+
+    // =============================================================
+    // TOAST
+    // =============================================================
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const bgColor = type === 'success' ? '#28a745' : type === 'warning' ? '#ffc107' : '#dc3545';
+        const textColor = type === 'warning' ? '#333' : 'white';
+        const icon = type === 'success' ? 'check-circle-fill' : type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill';
+        const toastHtml = `<div class="toast notification-toast" style="background:${bgColor}; color:${textColor}; border-radius:10px; margin-bottom:10px;">
+            <div class="toast-body"><div style="display:flex; align-items:flex-start;"><i class="bi bi-${icon} me-2" style="font-size:20px;"></i><div>${message}</div></div></div></div>`;
+        container.insertAdjacentHTML('afterbegin', toastHtml);
+        setTimeout(() => {
+            const firstToast = container.firstElementChild;
+            if (firstToast) { firstToast.style.transition = 'opacity 0.3s'; firstToast.style.opacity = '0'; setTimeout(() => firstToast.remove(), 300); }
+        }, 5000);
+    }
+
+    function goHome() {
+        document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('homePage').style.display = 'block';
+    }
+
+    function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    function genererMatricule() { return Math.floor(1000 + Math.random() * 9000).toString(); }
+
+    async function genererMatriculeUnique(collection) {
+        let matricule, isUnique = false, attempts = 0;
+        while (!isUnique && attempts < 100) {
+            matricule = genererMatricule();
+            const snapshot = await db.collection(collection).where('matricule', '==', matricule).get();
+            if (snapshot.empty) isUnique = true;
+            attempts++;
         }
-        
-        function goHome() { 
-            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('homePage').style.display = 'block'; 
+        return matricule;
+    }
+
+    function formaterNumeroWhatsapp(numero) {
+        if (!numero) return null;
+        let clean = numero.replace(/\D/g, '');
+        if (clean.startsWith('0')) clean = '243' + clean.substring(1);
+        if (!clean.startsWith('243') && clean.length <= 10) clean = '243' + clean;
+        return clean;
+    }
+
+    // =============================================================
+    // CHARGEMENT DES DONNÉES
+    // =============================================================
+    async function chargerToutesLesDonnees() {
+        try {
+            const famillesSnap = await db.collection('familles').get();
+            allFamilles = []; famillesSnap.forEach(doc => allFamilles.push({ id: doc.id, ...doc.data() }));
+
+            const parentesSnap = await db.collection('parentes').get();
+            allParentes = []; parentesSnap.forEach(doc => allParentes.push({ id: doc.id, ...doc.data() }));
+
+            const invitesSnap = await db.collection('invites').get();
+            allInvites = []; invitesSnap.forEach(doc => allInvites.push({ id: doc.id, ...doc.data() }));
+
+            const tablesSnap = await db.collection('tables').get();
+            allTables = []; tablesSnap.forEach(doc => allTables.push({ id: doc.id, ...doc.data() }));
+
+            const protocolesSnap = await db.collection('protocoles').get();
+            allProtocoles = []; protocolesSnap.forEach(doc => allProtocoles.push({ id: doc.id, ...doc.data() }));
+
+            updateAllSelects();
+            afficherToutesLesListes();
+            afficherInvitesSelection();
+            chargerPlan();
+        } catch (error) {
+            console.error('Erreur chargement données:', error);
         }
-        
-        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        
-        function genererMatricule() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
-        }
-        
-        async function genererMatriculeUnique(collection) {
-            let matricule;
-            let isUnique = false;
-            let attempts = 0;
-            while (!isUnique && attempts < 100) {
-                matricule = genererMatricule();
-                const snapshot = await db.collection(collection).where('matricule', '==', matricule).get();
-                if (snapshot.empty) isUnique = true;
-                attempts++;
-            }
-            return matricule;
-        }
-        
-        // ========== CHARGEMENT DES DONNÉES ==========
-        async function chargerToutesLesDonnees() {
-            try {
-                const famillesSnap = await db.collection('familles').get();
-                allFamilles = [];
-                famillesSnap.forEach(doc => allFamilles.push({ id: doc.id, ...doc.data() }));
-                
-                const parentesSnap = await db.collection('parentes').get();
-                allParentes = [];
-                parentesSnap.forEach(doc => allParentes.push({ id: doc.id, ...doc.data() }));
-                
-                const invitesSnap = await db.collection('invites').get();
-                allInvites = [];
-                invitesSnap.forEach(doc => allInvites.push({ id: doc.id, ...doc.data() }));
-                
-                const tablesSnap = await db.collection('tables').get();
-                allTables = [];
-                tablesSnap.forEach(doc => allTables.push({ id: doc.id, ...doc.data() }));
-                
-                const protocolesSnap = await db.collection('protocoles').get();
-                allProtocoles = [];
-                protocolesSnap.forEach(doc => allProtocoles.push({ id: doc.id, ...doc.data() }));
-                
-                console.log('✅ Toutes les données chargées');
-                updateAllSelects();
-                afficherToutesLesListes();
-            } catch (error) {
-                console.error('❌ Erreur chargement données:', error);
-            }
-        }
-        
-        function updateAllSelects() {
-            // Mise à jour des selects pour les familles
-            const familleSelects = ['tableFamille', 'inviteFamille'];
-            familleSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (select) {
-                    select.innerHTML = '<option value="">Sélectionner une famille</option>';
-                    allFamilles.forEach(f => {
-                        select.innerHTML += `<option value="${f.id}">${escapeHtml(f.nom)}</option>`;
-                    });
-                }
+    }
+
+    function updateAllSelects() {
+        ['tableFamille', 'inviteFamille'].forEach(id => {
+            const s = document.getElementById(id);
+            if (s) { s.innerHTML = '<option value="">Sélectionner</option>'; allFamilles.forEach(f => s.innerHTML += `<option value="${f.id}">${escapeHtml(f.nom)}</option>`); }
+        });
+        ['tableParente', 'inviteParente'].forEach(id => {
+            const s = document.getElementById(id);
+            if (s) { s.innerHTML = '<option value="">Sélectionner</option>'; allParentes.forEach(p => s.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`); }
+        });
+    }
+
+    function afficherToutesLesListes() { afficherTables(); afficherProtocoles(); afficherInvites(); afficherFamilles(); afficherParentes(); }
+
+    // =============================================================
+    // TABLES
+    // =============================================================
+    async function creerTable() {
+        const nom = document.getElementById('tableNom').value.trim();
+        const occupation = parseInt(document.getElementById('tableOccupation').value) || 8;
+        const familleId = document.getElementById('tableFamille').value;
+        const parenteId = document.getElementById('tableParente').value;
+        const posX = parseFloat(document.getElementById('tablePosX').value);
+        const posY = parseFloat(document.getElementById('tablePosY').value);
+        const etage = document.getElementById('tableEtage').value || 'rdc';
+
+        if (!nom) { showToast('Veuillez entrer le nom de la table', 'warning'); return; }
+
+        const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
+        const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
+
+        try {
+            await db.collection('tables').add({
+                nom, occupation, familleId: familleId || '', familleNom,
+                parenteId: parenteId || '', parenteNom,
+                posX: isNaN(posX) ? null : posX,
+                posY: isNaN(posY) ? null : posY,
+                etage,
+                dateCreation: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            // Mise à jour des selects pour les parentés
-            const parenteSelects = ['tableParente', 'inviteParente'];
-            parenteSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (select) {
-                    select.innerHTML = '<option value="">Sélectionner une parenté</option>';
-                    allParentes.forEach(p => {
-                        select.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`;
-                    });
-                }
-            });
+            showToast('✅ Table créée');
+            document.getElementById('tableNom').value = '';
+            document.getElementById('tableOccupation').value = '8';
+            document.getElementById('tableFamille').value = '';
+            document.getElementById('tableParente').value = '';
+            document.getElementById('tablePosX').value = '';
+            document.getElementById('tablePosY').value = '';
+            chargerToutesLesDonnees();
+            dessinerApercuPlan();
+        } catch (error) { showToast('Erreur création table', 'error'); }
+    }
+
+    function afficherTables() {
+        const container = document.getElementById('tablesListe');
+        if (!container) return;
+        if (allTables.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune table</p></div>';
+            return;
         }
-        
-        function afficherToutesLesListes() {
-            afficherTables();
-            afficherProtocoles();
-            afficherInvites();
-            afficherFamilles();
-            afficherParentes();
-        }
-        
-        // ========== TABLES ==========
-        async function creerTable() {
+        let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Nom</th><th>Occupation</th><th>Famille</th><th>Parenté</th><th>Position</th><th>Étage</th><th>Actions</th></tr></thead><tbody>';
+        allTables.forEach(t => {
+            const pos = (t.posX !== undefined && t.posX !== null) ? `(${t.posX}%, ${t.posY}%)` : '❌';
+            html += `<tr>
+                <td><strong>${escapeHtml(t.nom)}</strong></td>
+                <td><span class="badge bg-info">${t.occupation}</span></td>
+                <td>${escapeHtml(t.familleNom || '-')}</td>
+                <td>${escapeHtml(t.parenteNom || '-')}</td>
+                <td>${pos}</td>
+                <td>${escapeHtml(t.etage || 'rdc')}</td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editerTable('${t.id}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="supprimerTable('${t.id}')"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    async function supprimerTable(id) {
+        if (confirm('Supprimer cette table ?')) { await db.collection('tables').doc(id).delete(); showToast('Table supprimée'); chargerToutesLesDonnees(); }
+    }
+
+    async function editerTable(id) {
+        const table = allTables.find(t => t.id === id);
+        if (!table) return;
+        document.getElementById('tableNom').value = table.nom || '';
+        document.getElementById('tableOccupation').value = table.occupation || 8;
+        document.getElementById('tableFamille').value = table.familleId || '';
+        document.getElementById('tableParente').value = table.parenteId || '';
+        document.getElementById('tablePosX').value = table.posX || '';
+        document.getElementById('tablePosY').value = table.posY || '';
+        document.getElementById('tableEtage').value = table.etage || 'rdc';
+
+        const btn = document.getElementById('btnCreerTable');
+        btn.textContent = '✏️ Mettre à jour';
+        btn.dataset.editId = id;
+        btn.onclick = async function() {
+            const editId = this.dataset.editId;
             const nom = document.getElementById('tableNom').value.trim();
             const occupation = parseInt(document.getElementById('tableOccupation').value) || 8;
             const familleId = document.getElementById('tableFamille').value;
             const parenteId = document.getElementById('tableParente').value;
-            
-            if (!nom) { showToast('Veuillez entrer le nom de la table', 'warning'); return; }
-            
+            const posX = parseFloat(document.getElementById('tablePosX').value);
+            const posY = parseFloat(document.getElementById('tablePosY').value);
+            const etage = document.getElementById('tableEtage').value || 'rdc';
+            if (!nom) { showToast('Veuillez entrer le nom', 'warning'); return; }
             const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
             const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
-            
             try {
-                await db.collection('tables').add({
-                    nom: nom,
-                    occupation: occupation,
-                    familleId: familleId || '',
-                    familleNom: familleNom,
-                    parenteId: parenteId || '',
-                    parenteNom: parenteNom,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                await db.collection('tables').doc(editId).update({
+                    nom, occupation, familleId: familleId || '', familleNom,
+                    parenteId: parenteId || '', parenteNom,
+                    posX: isNaN(posX) ? null : posX,
+                    posY: isNaN(posY) ? null : posY,
+                    etage,
+                    dateModification: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast('✅ Table créée avec succès');
-                document.getElementById('tableNom').value = '';
-                document.getElementById('tableOccupation').value = '8';
-                document.getElementById('tableFamille').value = '';
-                document.getElementById('tableParente').value = '';
+                showToast('✅ Table mise à jour');
+                this.textContent = '<i class="bi bi-check-lg"></i> Valider la table';
+                this.dataset.editId = '';
+                this.onclick = creerTable;
                 chargerToutesLesDonnees();
-            } catch (error) {
-                console.error('Erreur création table:', error);
-                showToast('Erreur lors de la création de la table', 'error');
-            }
-        }
-        
-        function afficherTables() {
-            const container = document.getElementById('tablesListe');
-            if (!container) return;
-            
-            if (allTables.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune table créée</p></div>';
-                return;
-            }
-            
-            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Nom de la table</th><th>Occupation</th><th>Famille</th><th>Parenté</th><th>Actions</th></tr></thead><tbody>';
-            allTables.forEach(t => {
-                html += `<tr>
-                    <td><strong>${escapeHtml(t.nom)}</strong></td>
-                    <td><span class="badge bg-info">${t.occupation} places</span></td>
-                    <td>${escapeHtml(t.familleNom || '-')}</td>
-                    <td>${escapeHtml(t.parenteNom || '-')}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="supprimerTable('${t.id}')"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-        
-        async function supprimerTable(id) {
-            if (confirm('Voulez-vous vraiment supprimer cette table ?')) {
-                await db.collection('tables').doc(id).delete();
-                showToast('Table supprimée');
-                chargerToutesLesDonnees();
-            }
-        }
-        
-        // ========== PROTOCOLES ==========
-        async function creerProtocole() {
-            const nom = document.getElementById('protocoleNom').value.trim();
-            const genre = document.getElementById('protocoleGenre').value;
-            const telephone = document.getElementById('protocoleTelephone').value.trim();
-            
-            if (!nom) { showToast('Veuillez entrer le nom complet', 'warning'); return; }
-            if (!genre) { showToast('Veuillez sélectionner le genre', 'warning'); return; }
-            if (!telephone) { showToast('Veuillez entrer le téléphone', 'warning'); return; }
-            
-            const matricule = await genererMatriculeUnique('protocoles');
-            
-            try {
-                await db.collection('protocoles').add({
-                    nomComplet: nom,
-                    genre: genre,
-                    telephone: telephone,
-                    matricule: matricule,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast(`✅ Protocole créé - Matricule: ${matricule}`);
-                document.getElementById('protocoleNom').value = '';
-                document.getElementById('protocoleGenre').value = '';
-                document.getElementById('protocoleTelephone').value = '';
-                chargerToutesLesDonnees();
-            } catch (error) {
-                console.error('Erreur création protocole:', error);
-                showToast('Erreur lors de la création du protocole', 'error');
-            }
-        }
-        
-        function afficherProtocoles() {
-            const container = document.getElementById('protocolesListe');
-            if (!container) return;
-            
-            if (allProtocoles.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun protocole créé</p></div>';
-                return;
-            }
-            
-            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom complet</th><th>Genre</th><th>Téléphone</th><th>Actions</th></tr></thead><tbody>';
-            allProtocoles.forEach(p => {
-                html += `<tr>
-                    <td><span class="badge-matricule">${escapeHtml(p.matricule)}</span></td>
-                    <td><strong>${escapeHtml(p.nomComplet)}</strong></td>
-                    <td>${p.genre === 'M' ? '👨 Masculin' : '👩 Féminin'}</td>
-                    <td>${escapeHtml(p.telephone)}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="supprimerProtocole('${p.id}')"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-        
-        async function supprimerProtocole(id) {
-            if (confirm('Voulez-vous vraiment supprimer ce protocole ?')) {
-                await db.collection('protocoles').doc(id).delete();
-                showToast('Protocole supprimé');
-                chargerToutesLesDonnees();
-            }
-        }
-        
-        // ========== INVITÉS ==========
-        async function creerInvite() {
-            const nom = document.getElementById('inviteNom').value.trim();
-            const telephone = document.getElementById('inviteTelephone').value.trim();
-            const adresse = document.getElementById('inviteAdresse').value.trim();
-            const familleId = document.getElementById('inviteFamille').value;
-            const parenteId = document.getElementById('inviteParente').value;
-            
-            if (!nom) { showToast('Veuillez entrer le nom complet', 'warning'); return; }
-            
-            const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
-            const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
-            
-            const matricule = await genererMatriculeUnique('invites');
-            
-            try {
-                await db.collection('invites').add({
-                    nomComplet: nom,
-                    telephone: telephone,
-                    adresse: adresse,
-                    familleId: familleId || '',
-                    familleNom: familleNom,
-                    parenteId: parenteId || '',
-                    parenteNom: parenteNom,
-                    matricule: matricule,
-                    estValide: false,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast(`✅ Invité créé - Matricule: ${matricule}`);
-                document.getElementById('inviteNom').value = '';
-                document.getElementById('inviteTelephone').value = '';
-                document.getElementById('inviteAdresse').value = '';
-                document.getElementById('inviteFamille').value = '';
-                document.getElementById('inviteParente').value = '';
-                chargerToutesLesDonnees();
-            } catch (error) {
-                console.error('Erreur création invité:', error);
-                showToast('Erreur lors de la création de l\'invité', 'error');
-            }
-        }
-        
-        function afficherInvites() {
-            const container = document.getElementById('invitesListe');
-            const countBadge = document.getElementById('inviteCount');
-            if (!container) return;
-            
-            if (countBadge) countBadge.textContent = allInvites.length;
-            
-            if (allInvites.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucun invité</p></div>';
-                return;
-            }
-            
-            let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom complet</th><th>Téléphone</th><th>Famille</th><th>Parenté</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
-            allInvites.forEach(inv => {
-                html += `<tr>
-                    <td><span class="badge-matricule">${escapeHtml(inv.matricule)}</span></td>
-                    <td><strong>${escapeHtml(inv.nomComplet)}</strong></td>
-                    <td>${escapeHtml(inv.telephone || '-')}</td>
-                    <td>${escapeHtml(inv.familleNom || '-')}</td>
-                    <td>${escapeHtml(inv.parenteNom || '-')}</td>
-                    <td><span class="badge ${inv.estValide ? 'bg-success' : 'bg-warning'}">${inv.estValide ? 'Entré' : 'En attente'}</span></td>
-                    <td><button class="btn btn-sm btn-danger" onclick="supprimerInvite('${inv.id}')"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-        
-        async function supprimerInvite(id) {
-            if (confirm('Voulez-vous vraiment supprimer cet invité ?')) {
-                await db.collection('invites').doc(id).delete();
-                showToast('Invité supprimé');
-                chargerToutesLesDonnees();
-            }
-        }
-        
-        // ========== IMPORTATION EXCEL ==========
-        function telechargerModeleExcel() {
-            const modele = [
-                ['Nom complet', 'Téléphone', 'Adresse', 'Famille', 'Parenté'],
-                ['Jean Dupont', '0123456789', '123 Rue de Paris', 'Famille Dupont', 'Ami'],
-                ['Marie Curie', '0987654321', '456 Avenue des Sciences', 'Famille Curie', 'Collègue']
-            ];
-            const ws = XLSX.utils.aoa_to_sheet(modele);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Invités');
-            XLSX.writeFile(wb, 'modele_invites_hybrilink.xlsx');
-            showToast('Modèle téléchargé avec succès');
-        }
-        
-        function gererFichierExcel(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-                
-                if (jsonData.length < 2) {
-                    showToast('Fichier vide ou invalide', 'error');
-                    return;
+                dessinerApercuPlan();
+            } catch (error) { showToast('Erreur mise à jour', 'error'); }
+        };
+        showToast('✏️ Modification en cours. Cliquez sur "Mettre à jour" pour valider.', 'info');
+        document.getElementById('panel-table').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // =============================================================
+    // PLAN AVEC CLOUDINARY
+    // =============================================================
+    async function chargerPlan() {
+        try {
+            const doc = await db.collection('config').doc('planSalle').get();
+            if (doc.exists && doc.data().planUrl) {
+                let url = doc.data().planUrl;
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    planUrl = url;
+                } else {
+                    planUrl = `https://res.cloudinary.com/${CLOUDINARY_CONFIG.cloudName}/image/upload/${url}`;
                 }
-                
-                const headers = jsonData[0];
-                excelData = [];
-                for (let i = 1; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    if (row.length > 0 && row[0]) {
-                        excelData.push({
-                            nomComplet: row[0] || '',
-                            telephone: row[1] || '',
-                            adresse: row[2] || '',
-                            famille: row[3] || '',
-                            parente: row[4] || ''
-                        });
+                afficherPlan();
+                dessinerApercuPlan();
+                return planUrl;
+            }
+            return null;
+        } catch (error) { console.error('Erreur chargement plan:', error); return null; }
+    }
+
+    function afficherPlan() {
+        const previewContainer = document.getElementById('planPreviewContainer');
+        const previewImage = document.getElementById('planPreviewImage');
+        const aucunDiv = document.getElementById('planAucun');
+        if (planUrl) {
+            previewContainer.style.display = 'block';
+            aucunDiv.style.display = 'none';
+            previewImage.src = planUrl;
+            previewImage.onload = () => { planImage = previewImage; dessinerApercuPlan(); };
+        } else {
+            previewContainer.style.display = 'none';
+            aucunDiv.style.display = 'block';
+        }
+    }
+
+    async function uploaderPlan(file) {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+
+        showToast('📤 Upload vers Cloudinary en cours...', 'info');
+
+        try {
+            const response = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
+                { method: 'POST', body: formData }
+            );
+
+            const data = await response.json();
+
+            if (data.secure_url) {
+                await db.collection('config').doc('planSalle').set({
+                    planUrl: data.secure_url,
+                    dateUpload: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                planUrl = data.secure_url;
+                showToast('✅ Plan uploadé avec succès vers Cloudinary', 'success');
+                afficherPlan();
+                chargerToutesLesDonnees();
+            } else {
+                showToast('❌ Erreur lors de l\'upload vers Cloudinary', 'error');
+            }
+        } catch (error) {
+            console.error('Erreur upload:', error);
+            showToast('❌ Erreur de connexion à Cloudinary', 'error');
+        }
+    }
+
+    async function supprimerPlan() {
+        if (confirm('Supprimer le plan ?')) {
+            try {
+                await db.collection('config').doc('planSalle').delete();
+                planUrl = null;
+                planImage = null;
+                showToast('Plan supprimé');
+                afficherPlan();
+                dessinerApercuPlan();
+            } catch (error) { showToast('Erreur suppression', 'error'); }
+        }
+    }
+
+    function dessinerApercuPlan() {
+        const canvas = document.getElementById('planApercuCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#f5f0ea';
+        ctx.fillRect(0, 0, w, h);
+
+        if (planImage && planImage.complete && planImage.naturalWidth > 0) {
+            const scale = Math.min(w / planImage.naturalWidth, h / planImage.naturalHeight) * 0.85;
+            const x = (w - planImage.naturalWidth * scale) / 2;
+            const y = (h - planImage.naturalHeight * scale) / 2;
+            ctx.drawImage(planImage, x, y, planImage.naturalWidth * scale, planImage.naturalHeight * scale);
+
+            allTables.forEach(table => {
+                if (table.posX !== undefined && table.posX !== null) {
+                    const px = x + table.posX * planImage.naturalWidth * scale / 100;
+                    const py = y + table.posY * planImage.naturalHeight * scale / 100;
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                    ctx.shadowBlur = 8;
+                    ctx.fillStyle = table.familleNom ? '#4a90e2' : '#ff6b6b';
+                    ctx.beginPath();
+                    ctx.arc(px, py, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 10px Montserrat, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(table.nom, px, py - 20);
+                    if (table.familleNom) {
+                        ctx.fillStyle = '#666';
+                        ctx.font = '8px Montserrat, sans-serif';
+                        ctx.fillText(table.familleNom, px, py + 25);
                     }
+                    ctx.restore();
                 }
+            });
+            document.getElementById('planApercuOverlay').style.display = 'none';
+        } else {
+            document.getElementById('planApercuOverlay').style.display = 'block';
+        }
+    }
+
+    // =============================================================
+    // SÉLECTEUR DE PLAN AVEC POINTEUR ROUGE FONCTIONNEL
+    // =============================================================
+    function ouvrirSelecteurPlan() {
+        if (!planUrl) { 
+            showToast('⚠️ Chargez d\'abord un plan', 'warning'); 
+            return; 
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-selecteur';
+
+        modal.innerHTML = `
+            <div class="modal-selecteur-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <h5 style="color: var(--primary-blue); margin: 0; font-size: 16px;">
+                        <i class="bi bi-geo-alt"></i> Cliquez sur le plan pour placer la table
+                    </h5>
+                    <div class="zoom-controls">
+                        <button id="selecteurZoomIn" class="btn-zoom"><i class="bi bi-zoom-in"></i></button>
+                        <button id="selecteurZoomOut" class="btn-zoom"><i class="bi bi-zoom-out"></i></button>
+                        <button id="selecteurReset" class="btn-zoom"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        <span class="zoom-level" id="selecteurZoomLevel">Zoom: 100%</span>
+                    </div>
+                </div>
                 
-                afficherApercuExcel(headers);
+                <div class="modal-selecteur-img-wrapper" id="selecteurWrapper">
+                    <div class="modal-selecteur-zoom-container" id="selecteurZoomContainer">
+                        <img 
+                            id="selecteurPlanImage" 
+                            src="${planUrl}" 
+                            crossorigin="anonymous"
+                            alt="Plan de la salle"
+                            style="display:block; width:100%; height:auto; pointer-events:none; user-select:none;"
+                        >
+                        <div class="modal-selecteur-point" id="selecteurPoint"></div>
+                        <div class="modal-selecteur-crosshair" id="selecteurCrosshair">
+                            <div class="h"></div>
+                            <div class="v"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center;">
+                    <span class="coords-display" id="selecteurCoords">
+                        ⚡ Position: non sélectionnée
+                    </span>
+                    <button class="btn btn-success" id="selecteurValider" disabled style="padding: 8px 24px;">
+                        <i class="bi bi-check-lg"></i> Valider
+                    </button>
+                    <button class="btn btn-secondary" id="selecteurAnnuler" style="padding: 8px 24px;">
+                        <i class="bi bi-x-lg"></i> Annuler
+                    </button>
+                </div>
+                <div style="text-align: center; margin-top: 8px; font-size: 12px; color: #999;">
+                    <i class="bi bi-mouse"></i> Molette pour zoomer · Glissez pour déplacer · Cliquez pour placer
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // ========== RÉFÉRENCES ==========
+        const wrapper = modal.querySelector('#selecteurWrapper');
+        const container = modal.querySelector('#selecteurZoomContainer');
+        const img = modal.querySelector('#selecteurPlanImage');
+        const point = modal.querySelector('#selecteurPoint');
+        const crosshair = modal.querySelector('#selecteurCrosshair');
+        const coordsSpan = modal.querySelector('#selecteurCoords');
+        const zoomLevelSpan = modal.querySelector('#selecteurZoomLevel');
+        const validerBtn = modal.querySelector('#selecteurValider');
+        const annulerBtn = modal.querySelector('#selecteurAnnuler');
+        const zoomInBtn = modal.querySelector('#selecteurZoomIn');
+        const zoomOutBtn = modal.querySelector('#selecteurZoomOut');
+        const resetBtn = modal.querySelector('#selecteurReset');
+
+        let selectedX = null;
+        let selectedY = null;
+        let currentZoom = 1;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragPanX = 0;
+        let dragPanY = 0;
+
+        // ========== ZOOM ==========
+        function updateTransform() {
+            container.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+            zoomLevelSpan.textContent = `Zoom: ${Math.round(currentZoom * 100)}%`;
+        }
+
+        function setZoom(zoom, centerX, centerY) {
+            const oldZoom = currentZoom;
+            currentZoom = Math.min(5, Math.max(0.5, zoom));
+            
+            if (centerX !== undefined && centerY !== undefined) {
+                const wrapperRect = wrapper.getBoundingClientRect();
+                const relX = (centerX - wrapperRect.left) / wrapperRect.width;
+                const relY = (centerY - wrapperRect.top) / wrapperRect.height;
+                const imgRect = img.getBoundingClientRect();
+                const imgW = imgRect.width / oldZoom;
+                const imgH = imgRect.height / oldZoom;
+                panX = -(relX * imgW * currentZoom - relX * wrapperRect.width);
+                panY = -(relY * imgH * currentZoom - relY * wrapperRect.height);
+            }
+            
+            updateTransform();
+        }
+
+        function resetView() {
+            currentZoom = 1;
+            panX = 0;
+            panY = 0;
+            updateTransform();
+            // Ne pas cacher le point si déjà sélectionné
+            if (selectedX !== null) {
+                point.style.display = 'block';
+                point.className = 'modal-selecteur-point active confirmed';
+            } else {
+                point.style.display = 'none';
+                crosshair.style.display = 'none';
+            }
+        }
+
+        // ========== DRAG POUR DÉPLACER ==========
+        wrapper.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            dragPanX = panX;
+            dragPanY = panY;
+            wrapper.style.cursor = 'grabbing';
+            container.classList.add('dragging');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            panX = dragPanX + dx;
+            panY = dragPanY + dy;
+            updateTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            wrapper.style.cursor = 'crosshair';
+            container.classList.remove('dragging');
+        });
+
+        // ========== ZOOM AVEC LA MOLETTE ==========
+        wrapper.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            setZoom(currentZoom + delta, e.clientX, e.clientY);
+        }, { passive: false });
+
+        // ========== BOUTONS ZOOM ==========
+        zoomInBtn.addEventListener('click', () => {
+            const center = wrapper.getBoundingClientRect();
+            setZoom(currentZoom + 0.2, center.left + center.width/2, center.top + center.height/2);
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            const center = wrapper.getBoundingClientRect();
+            setZoom(currentZoom - 0.2, center.left + center.width/2, center.top + center.height/2);
+        });
+
+        resetBtn.addEventListener('click', resetView);
+
+        // ========== FONCTION POUR OBTENIR LES COORDONNÉES ==========
+        function getCoords(e) {
+            const rect = img.getBoundingClientRect();
+            // Calculer les coordonnées en tenant compte du zoom
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            return { 
+                x: Math.min(100, Math.max(0, x)), 
+                y: Math.min(100, Math.max(0, y)) 
             };
-            reader.readAsArrayBuffer(file);
         }
-        
-        function afficherApercuExcel(headers) {
-            const previewDiv = document.getElementById('excelPreview');
-            const table = document.getElementById('excelPreviewTable');
+
+        // ========== METTRE À JOUR LA POSITION DU POINT ==========
+        function updatePosition(e) {
+            const coords = getCoords(e);
             
-            previewDiv.style.display = 'block';
+            // Afficher le point rouge
+            point.style.display = 'block';
+            point.style.left = (e.clientX - wrapper.getBoundingClientRect().left) + 'px';
+            point.style.top = (e.clientY - wrapper.getBoundingClientRect().top) + 'px';
+            point.className = 'modal-selecteur-point active confirmed';
             
-            let headerHtml = '<tr><th>#</th>';
-            headers.forEach(h => headerHtml += `<th>${escapeHtml(h)}</th>`);
-            headerHtml += '</tr>';
-            table.querySelector('thead').innerHTML = headerHtml;
+            // Afficher le crosshair
+            crosshair.style.display = 'block';
+            crosshair.style.left = (e.clientX - wrapper.getBoundingClientRect().left - 20) + 'px';
+            crosshair.style.top = (e.clientY - wrapper.getBoundingClientRect().top - 20) + 'px';
             
-            let bodyHtml = '';
-            excelData.forEach((row, idx) => {
-                bodyHtml += `<tr><td>${idx + 1}</td><td>${escapeHtml(row.nomComplet)}</td><td>${escapeHtml(row.telephone)}</td><td>${escapeHtml(row.adresse)}</td><td>${escapeHtml(row.famille)}</td><td>${escapeHtml(row.parente)}</td></tr>`;
+            // Mettre à jour les coordonnées affichées
+            coordsSpan.innerHTML = `✅ Position: <strong>X=${coords.x.toFixed(1)}%</strong>, <strong>Y=${coords.y.toFixed(1)}%</strong>`;
+            coordsSpan.className = 'coords-display highlight';
+            
+            selectedX = coords.x;
+            selectedY = coords.y;
+            validerBtn.disabled = false;
+        }
+
+        // ========== SURVOL DE LA SOURIS (AFFICHE LE CROSSHAIR) ==========
+        img.addEventListener('mousemove', function(e) {
+            if (isDragging) return;
+            const coords = getCoords(e);
+            
+            // Afficher le crosshair en survol
+            crosshair.style.display = 'block';
+            crosshair.style.left = (e.clientX - wrapper.getBoundingClientRect().left - 20) + 'px';
+            crosshair.style.top = (e.clientY - wrapper.getBoundingClientRect().top - 20) + 'px';
+            
+            // Afficher les coordonnées en temps réel
+            coordsSpan.innerHTML = `⚡ X=${coords.x.toFixed(1)}%, Y=${coords.y.toFixed(1)}% (clic pour valider)`;
+            coordsSpan.className = 'coords-display';
+        });
+
+        // ========== QUAND LA SOURIS QUITTE L'IMAGE ==========
+        img.addEventListener('mouseleave', function() {
+            if (!selectedX) {
+                crosshair.style.display = 'none';
+            }
+        });
+
+        // ========== CLIC POUR VALIDER LA POSITION (POINT ROUGE) ==========
+        img.addEventListener('click', function(e) {
+            if (isDragging) return;
+            console.log('🟢 Clic sur le plan détecté !');
+            updatePosition(e);
+            showToast(`📍 Position: X=${selectedX.toFixed(1)}%, Y=${selectedY.toFixed(1)}%`, 'success');
+        });
+
+        // ========== BOUTONS ==========
+        validerBtn.addEventListener('click', function() {
+            if (selectedX !== null && selectedY !== null) {
+                document.getElementById('tablePosX').value = selectedX.toFixed(1);
+                document.getElementById('tablePosY').value = selectedY.toFixed(1);
+                showToast(`✅ Position enregistrée: X=${selectedX.toFixed(1)}%, Y=${selectedY.toFixed(1)}%`, 'success');
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        });
+
+        annulerBtn.addEventListener('click', function() {
+            modal.remove();
+            document.body.style.overflow = '';
+        });
+
+        // ========== FERMER AVEC ECHAP ==========
+        modal.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.body.style.overflow = '';
+            }
+        });
+
+        // ========== EMPÊCHER LE SCROLL DU BODY ==========
+        document.body.style.overflow = 'hidden';
+
+        // ========== RÉINITIALISER AU CHARGEMENT ==========
+        setTimeout(function() {
+            resetView();
+            console.log('🟢 Sélecteur de plan chargé avec succès !');
+        }, 300);
+    }
+
+    // =============================================================
+    // PROTOCOLE
+    // =============================================================
+    async function creerProtocole() {
+        const nom = document.getElementById('protocoleNom').value.trim();
+        const genre = document.getElementById('protocoleGenre').value;
+        const telephone = document.getElementById('protocoleTelephone').value.trim();
+        if (!nom || !genre || !telephone) { showToast('Tous les champs sont requis', 'warning'); return; }
+        const matricule = await genererMatriculeUnique('protocoles');
+        try {
+            await db.collection('protocoles').add({ nomComplet: nom, genre, telephone, matricule, dateCreation: firebase.firestore.FieldValue.serverTimestamp() });
+            showToast(`✅ Protocole créé - ${matricule}`);
+            document.getElementById('protocoleNom').value = '';
+            document.getElementById('protocoleGenre').value = '';
+            document.getElementById('protocoleTelephone').value = '';
+            chargerToutesLesDonnees();
+        } catch (error) { showToast('Erreur création protocole', 'error'); }
+    }
+
+    function afficherProtocoles() {
+        const container = document.getElementById('protocolesListe');
+        if (!container) return;
+        if (allProtocoles.length === 0) { container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun protocole</p></div>'; return; }
+        let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom</th><th>Genre</th><th>Téléphone</th><th>Actions</th></tr></thead><tbody>';
+        allProtocoles.forEach(p => {
+            html += `<tr><td><span class="badge-matricule">${escapeHtml(p.matricule)}</span></td><td><strong>${escapeHtml(p.nomComplet)}</strong></td><td>${p.genre === 'M' ? '👨 Masculin' : '👩 Féminin'}</td><td>${escapeHtml(p.telephone)}</td><td><button class="btn btn-sm btn-danger" onclick="supprimerProtocole('${p.id}')"><i class="bi bi-trash"></i></button></td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    async function supprimerProtocole(id) {
+        if (confirm('Supprimer ce protocole ?')) { await db.collection('protocoles').doc(id).delete(); showToast('Protocole supprimé'); chargerToutesLesDonnees(); }
+    }
+
+    // =============================================================
+    // INVITÉS
+    // =============================================================
+    async function creerInvite() {
+        const nom = document.getElementById('inviteNom').value.trim();
+        const telephone = document.getElementById('inviteTelephone').value.trim();
+        const adresse = document.getElementById('inviteAdresse').value.trim();
+        const familleId = document.getElementById('inviteFamille').value;
+        const parenteId = document.getElementById('inviteParente').value;
+        if (!nom) { showToast('Veuillez entrer le nom', 'warning'); return; }
+        const familleNom = familleId ? allFamilles.find(f => f.id === familleId)?.nom || '' : '';
+        const parenteNom = parenteId ? allParentes.find(p => p.id === parenteId)?.nom || '' : '';
+        const matricule = await genererMatriculeUnique('invites');
+        try {
+            await db.collection('invites').add({
+                nomComplet: nom, telephone, adresse, familleId: familleId || '', familleNom,
+                parenteId: parenteId || '', parenteNom,
+                matricule, estValide: false,
+                dateCreation: firebase.firestore.FieldValue.serverTimestamp()
             });
-            table.querySelector('tbody').innerHTML = bodyHtml;
-            
-            showToast(`${excelData.length} invités trouvés dans le fichier`, 'success');
-        }
-        
-        async function validerImportationExcel() {
-            if (excelData.length === 0) {
-                showToast('Aucune donnée à importer', 'warning');
-                return;
-            }
-            
-            let importes = 0;
-            for (const row of excelData) {
-                const matricule = await genererMatriculeUnique('invites');
-                await db.collection('invites').add({
-                    nomComplet: row.nomComplet,
-                    telephone: row.telephone,
-                    adresse: row.adresse,
-                    familleId: '',
-                    familleNom: row.famille,
-                    parenteId: '',
-                    parenteNom: row.parente,
-                    matricule: matricule,
-                    estValide: false,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                importes++;
-            }
-            
-            showToast(`✅ ${importes} invités importés avec succès`, 'success');
+            showToast(`✅ Invité créé - ${matricule}`);
+            document.getElementById('inviteNom').value = '';
+            document.getElementById('inviteTelephone').value = '';
+            document.getElementById('inviteAdresse').value = '';
+            document.getElementById('inviteFamille').value = '';
+            document.getElementById('inviteParente').value = '';
+            chargerToutesLesDonnees();
+        } catch (error) { showToast('Erreur création invité', 'error'); }
+    }
+
+    function afficherInvites() {
+        const container = document.getElementById('invitesListe');
+        const countBadge = document.getElementById('inviteCount');
+        if (countBadge) countBadge.textContent = allInvites.length;
+        if (!container) return;
+        if (allInvites.length === 0) { container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun invité</p></div>'; return; }
+        let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th>Matricule</th><th>Nom</th><th>Téléphone</th><th>Famille</th><th>Parenté</th><th>Statut</th><th>Actions</th></tr></thead><tbody>';
+        allInvites.forEach(inv => {
+            html += `<tr>
+                <td><span class="badge-matricule">${escapeHtml(inv.matricule)}</span></td>
+                <td><strong>${escapeHtml(inv.nomComplet)}</strong></td>
+                <td>${escapeHtml(inv.telephone || '-')}</td>
+                <td>${escapeHtml(inv.familleNom || '-')}</td>
+                <td>${escapeHtml(inv.parenteNom || '-')}</td>
+                <td><span class="badge ${inv.estValide ? 'bg-success' : 'bg-warning'}">${inv.estValide ? '✅ Entré' : '⏳ En attente'}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="supprimerInvite('${inv.id}')"><i class="bi bi-trash"></i></button>
+                    ${inv.telephone ? `<button class="btn btn-sm btn-success" onclick="envoyerInvitationIndividuelle('${inv.id}')"><i class="bi bi-whatsapp"></i></button>` : ''}
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    async function supprimerInvite(id) {
+        if (confirm('Supprimer cet invité ?')) { await db.collection('invites').doc(id).delete(); showToast('Invité supprimé'); chargerToutesLesDonnees(); }
+    }
+
+    // =============================================================
+    // EXCEL
+    // =============================================================
+    function telechargerModeleExcel() {
+        const modele = [['Nom complet', 'Téléphone', 'Adresse', 'Famille', 'Parenté'], ['Jean Dupont', '0123456789', '123 Rue de Paris', 'Famille Dupont', 'Ami']];
+        const ws = XLSX.utils.aoa_to_sheet(modele);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Invités');
+        XLSX.writeFile(wb, 'modele_invites_hybrilink.xlsx');
+        showToast('Modèle téléchargé');
+    }
+
+    function gererFichierExcel(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            if (jsonData.length < 2) { showToast('Fichier vide', 'error'); return; }
+            const headers = jsonData[0];
             excelData = [];
-            document.getElementById('excelPreview').style.display = 'none';
-            document.getElementById('excelFileInput').value = '';
-            chargerToutesLesDonnees();
-        }
-        
-        // ========== FAMILLES ==========
-        async function creerFamille() {
-            const nom = document.getElementById('familleNom').value.trim();
-            if (!nom) { showToast('Veuillez entrer le nom de la famille', 'warning'); return; }
-            
-            try {
-                await db.collection('familles').add({
-                    nom: nom,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast('✅ Famille créée avec succès');
-                document.getElementById('familleNom').value = '';
-                chargerToutesLesDonnees();
-            } catch (error) {
-                console.error('Erreur création famille:', error);
-                showToast('Erreur lors de la création de la famille', 'error');
-            }
-        }
-        
-        function afficherFamilles() {
-            const container = document.getElementById('famillesListe');
-            if (!container) return;
-            
-            if (allFamilles.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune famille créée</p></div>';
-                return;
-            }
-            
-            let html = '<div class="row">';
-            allFamilles.forEach(f => {
-                html += `<div class="col-md-3 col-sm-6 mb-3">
-                    <div class="list-group-item-custom d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-house-heart-fill me-2"></i><strong>${escapeHtml(f.nom)}</strong></span>
-                        <button class="btn btn-sm btn-danger" onclick="supprimerFamille('${f.id}')"><i class="bi bi-trash"></i></button>
-                    </div>
-                </div>`;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-        
-        async function supprimerFamille(id) {
-            if (confirm('Voulez-vous vraiment supprimer cette famille ?')) {
-                await db.collection('familles').doc(id).delete();
-                showToast('Famille supprimée');
-                chargerToutesLesDonnees();
-            }
-        }
-        
-        // ========== PARENTÉ ==========
-        async function creerParente() {
-            const nom = document.getElementById('parenteNom').value.trim();
-            if (!nom) { showToast('Veuillez entrer le nom de la catégorie', 'warning'); return; }
-            
-            try {
-                await db.collection('parentes').add({
-                    nom: nom,
-                    dateCreation: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                showToast('✅ Catégorie créée avec succès');
-                document.getElementById('parenteNom').value = '';
-                chargerToutesLesDonnees();
-            } catch (error) {
-                console.error('Erreur création parenté:', error);
-                showToast('Erreur lors de la création de la catégorie', 'error');
-            }
-        }
-        
-        function afficherParentes() {
-            const container = document.getElementById('parentesListe');
-            if (!container) return;
-            
-            if (allParentes.length === 0) {
-                container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size: 48px;"></i><p>Aucune catégorie créée</p></div>';
-                return;
-            }
-            
-            let html = '<div class="row">';
-            allParentes.forEach(p => {
-                html += `<div class="col-md-3 col-sm-6 mb-3">
-                    <div class="list-group-item-custom d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-diagram-3-fill me-2"></i><strong>${escapeHtml(p.nom)}</strong></span>
-                        <button class="btn btn-sm btn-danger" onclick="supprimerParente('${p.id}')"><i class="bi bi-trash"></i></button>
-                    </div>
-                </div>`;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        }
-        
-        async function supprimerParente(id) {
-            if (confirm('Voulez-vous vraiment supprimer cette catégorie ?')) {
-                await db.collection('parentes').doc(id).delete();
-                showToast('Catégorie supprimée');
-                chargerToutesLesDonnees();
-            }
-        }
-        
-        // ========== EVENT LISTENERS ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            chargerToutesLesDonnees();
-            
-            // Menu cards
-            document.querySelectorAll('.menu-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    document.getElementById('homePage').style.display = 'none';
-                    document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
-                    const panel = document.getElementById(`panel-${card.dataset.menu}`);
-                    if (panel) panel.classList.add('active');
-                });
-            });
-            
-            // Home brand
-            document.getElementById('homeBrand')?.addEventListener('click', (e) => { e.preventDefault(); goHome(); });
-            
-            // Création table
-            document.getElementById('btnCreerTable')?.addEventListener('click', creerTable);
-            
-            // Création protocole
-            document.getElementById('btnCreerProtocole')?.addEventListener('click', creerProtocole);
-            
-            // Création invité simple
-            document.getElementById('btnCreerInvite')?.addEventListener('click', creerInvite);
-            
-            // Création famille
-            document.getElementById('btnCreerFamille')?.addEventListener('click', creerFamille);
-            
-            // Création parenté
-            document.getElementById('btnCreerParente')?.addEventListener('click', creerParente);
-            
-            // Téléchargement modèle Excel
-            document.getElementById('btnTelechargerModele')?.addEventListener('click', telechargerModeleExcel);
-            
-            // Upload Excel
-            document.getElementById('excelUploadArea')?.addEventListener('click', () => {
-                document.getElementById('excelFileInput').click();
-            });
-            
-            document.getElementById('excelFileInput')?.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    gererFichierExcel(e.target.files[0]);
+            for (let i = 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (row.length > 0 && row[0]) {
+                    excelData.push({ nomComplet: row[0] || '', telephone: row[1] || '', adresse: row[2] || '', famille: row[3] || '', parente: row[4] || '' });
                 }
+            }
+            afficherApercuExcel(headers);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function afficherApercuExcel(headers) {
+        const previewDiv = document.getElementById('excelPreview');
+        const table = document.getElementById('excelPreviewTable');
+        previewDiv.style.display = 'block';
+        let headerHtml = '<tr><th>#</th>';
+        headers.forEach(h => headerHtml += `<th>${escapeHtml(h)}</th>`);
+        headerHtml += '</tr>';
+        table.querySelector('thead').innerHTML = headerHtml;
+        let bodyHtml = '';
+        excelData.forEach((row, idx) => {
+            bodyHtml += `<tr><td>${idx + 1}</td><td>${escapeHtml(row.nomComplet)}</td><td>${escapeHtml(row.telephone)}</td><td>${escapeHtml(row.adresse)}</td><td>${escapeHtml(row.famille)}</td><td>${escapeHtml(row.parente)}</td></tr>`;
+        });
+        table.querySelector('tbody').innerHTML = bodyHtml;
+        showToast(`${excelData.length} invités trouvés`);
+    }
+
+    async function validerImportationExcel() {
+        if (excelData.length === 0) { showToast('Aucune donnée', 'warning'); return; }
+        let importes = 0;
+        for (const row of excelData) {
+            const matricule = await genererMatriculeUnique('invites');
+            await db.collection('invites').add({
+                nomComplet: row.nomComplet, telephone: row.telephone, adresse: row.adresse,
+                familleId: '', familleNom: row.famille, parenteId: '', parenteNom: row.parente,
+                matricule, estValide: false,
+                dateCreation: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
-            // Drag and drop Excel
-            document.getElementById('excelUploadArea')?.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            
-            document.getElementById('excelUploadArea')?.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer.files.length > 0) {
-                    gererFichierExcel(e.dataTransfer.files[0]);
-                }
-            });
-            
-            // Validation Excel
-            document.getElementById('btnValiderExcel')?.addEventListener('click', validerImportationExcel);
-            
-            // Annulation Excel
-            document.getElementById('btnAnnulerExcel')?.addEventListener('click', () => {
-                excelData = [];
-                document.getElementById('excelPreview').style.display = 'none';
-                document.getElementById('excelFileInput').value = '';
+            importes++;
+        }
+        showToast(`✅ ${importes} invités importés`);
+        excelData = [];
+        document.getElementById('excelPreview').style.display = 'none';
+        document.getElementById('excelFileInput').value = '';
+        chargerToutesLesDonnees();
+    }
+
+    // =============================================================
+    // FAMILLES
+    // =============================================================
+    async function creerFamille() {
+        const nom = document.getElementById('familleNom').value.trim();
+        if (!nom) { showToast('Veuillez entrer le nom', 'warning'); return; }
+        try { await db.collection('familles').add({ nom, dateCreation: firebase.firestore.FieldValue.serverTimestamp() }); showToast('✅ Famille créée'); document.getElementById('familleNom').value = ''; chargerToutesLesDonnees(); }
+        catch (error) { showToast('Erreur création famille', 'error'); }
+    }
+
+    function afficherFamilles() {
+        const container = document.getElementById('famillesListe');
+        if (!container) return;
+        if (allFamilles.length === 0) { container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune famille</p></div>'; return; }
+        let html = '<div class="row">';
+        allFamilles.forEach(f => { html += `<div class="col-md-3 col-sm-6 mb-3"><div class="list-group-item-custom d-flex justify-content-between align-items-center"><span><i class="bi bi-house-heart-fill me-2"></i><strong>${escapeHtml(f.nom)}</strong></span><button class="btn btn-sm btn-danger" onclick="supprimerFamille('${f.id}')"><i class="bi bi-trash"></i></button></div></div>`; });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async function supprimerFamille(id) {
+        if (confirm('Supprimer cette famille ?')) { await db.collection('familles').doc(id).delete(); showToast('Famille supprimée'); chargerToutesLesDonnees(); }
+    }
+
+    // =============================================================
+    // PARENTÉ
+    // =============================================================
+    async function creerParente() {
+        const nom = document.getElementById('parenteNom').value.trim();
+        if (!nom) { showToast('Veuillez entrer le nom', 'warning'); return; }
+        try { await db.collection('parentes').add({ nom, dateCreation: firebase.firestore.FieldValue.serverTimestamp() }); showToast('✅ Catégorie créée'); document.getElementById('parenteNom').value = ''; chargerToutesLesDonnees(); }
+        catch (error) { showToast('Erreur création catégorie', 'error'); }
+    }
+
+    function afficherParentes() {
+        const container = document.getElementById('parentesListe');
+        if (!container) return;
+        if (allParentes.length === 0) { container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucune catégorie</p></div>'; return; }
+        let html = '<div class="row">';
+        allParentes.forEach(p => { html += `<div class="col-md-3 col-sm-6 mb-3"><div class="list-group-item-custom d-flex justify-content-between align-items-center"><span><i class="bi bi-diagram-3-fill me-2"></i><strong>${escapeHtml(p.nom)}</strong></span><button class="btn btn-sm btn-danger" onclick="supprimerParente('${p.id}')"><i class="bi bi-trash"></i></button></div></div>`; });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async function supprimerParente(id) {
+        if (confirm('Supprimer cette catégorie ?')) { await db.collection('parentes').doc(id).delete(); showToast('Catégorie supprimée'); chargerToutesLesDonnees(); }
+    }
+
+    // =============================================================
+    // PUBLICATION WHATSAPP
+    // =============================================================
+    function afficherInvitesSelection() {
+        const container = document.getElementById('invitesSelectionListe');
+        if (!container) return;
+        const totalBadge = document.getElementById('totalInvitesCount');
+        const selectedBadge = document.getElementById('selectedCount');
+        if (totalBadge) totalBadge.textContent = allInvites.length;
+        if (selectedBadge) selectedBadge.textContent = selectedInvites.size;
+
+        if (allInvites.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted"><i class="bi bi-inbox" style="font-size:48px;"></i><p>Aucun invité</p></div>';
+            return;
+        }
+
+        let html = '<div class="table-responsive"><table class="table table-bordered table-hover"><thead class="table-dark"><tr><th style="width:40px;"><input type="checkbox" id="selectAllCheckbox" class="invite-checkbox"></th><th>Matricule</th><th>Nom</th><th>Téléphone</th><th>Statut</th></tr></thead><tbody>';
+        allInvites.forEach(inv => {
+            const isSelected = selectedInvites.has(inv.id);
+            const hasPhone = inv.telephone && inv.telephone.trim() !== '';
+            html += `<tr style="${isSelected ? 'background:#e8f5e9;' : ''}">
+                <td><input type="checkbox" class="invite-checkbox invite-select" data-id="${inv.id}" ${isSelected ? 'checked' : ''} ${!hasPhone ? 'disabled' : ''}>${!hasPhone ? '<span class="text-muted" title="Pas de téléphone">📵</span>' : ''}</td>
+                <td><span class="badge-matricule">${escapeHtml(inv.matricule)}</span></td>
+                <td><strong>${escapeHtml(inv.nomComplet)}</strong></td>
+                <td>${escapeHtml(inv.telephone || '-')}</td>
+                <td><span class="badge ${inv.estValide ? 'bg-success' : 'bg-warning'}">${inv.estValide ? '✅ Entré' : '⏳ En attente'}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+
+        document.querySelectorAll('.invite-select').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const id = this.dataset.id;
+                if (this.checked) selectedInvites.add(id); else selectedInvites.delete(id);
+                updateSelectionCount();
             });
         });
-        
-        // Écouteurs temps réel
-        db.collection('familles').onSnapshot(() => chargerToutesLesDonnees());
-        db.collection('parentes').onSnapshot(() => chargerToutesLesDonnees());
-        db.collection('invites').onSnapshot(() => chargerToutesLesDonnees());
-        db.collection('tables').onSnapshot(() => chargerToutesLesDonnees());
-        db.collection('protocoles').onSnapshot(() => chargerToutesLesDonnees());
-        
-        console.log('✅ HybriLink Admin - Prêt');
-    </script>
-
-   <script>
-        // Enregistrement du Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('firebase-messaging-sw.js')
-                    .then(reg => console.log('✅ Service Worker push enregistré:', reg.scope))
-                    .catch(err => console.log('❌ Erreur Service Worker push:', err));
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('✅ SW principal enregistré:', reg.scope))
-                    .catch(err => console.log('❌ Erreur SW principal:', err));
+        document.getElementById('selectAllCheckbox')?.addEventListener('change', function() {
+            document.querySelectorAll('.invite-select:not(:disabled)').forEach(cb => {
+                cb.checked = this.checked;
+                const id = cb.dataset.id;
+                if (this.checked) selectedInvites.add(id); else selectedInvites.delete(id);
             });
+            updateSelectionCount();
+        });
+    }
+
+    function updateSelectionCount() {
+        const badge = document.getElementById('selectedCount');
+        if (badge) badge.textContent = selectedInvites.size;
+        const total = document.querySelectorAll('.invite-select:not(:disabled)');
+        const checked = document.querySelectorAll('.invite-select:checked');
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (selectAll && total.length > 0) selectAll.checked = total.length === checked.length;
+    }
+
+    function getMessagePourInvite(invite, appLien) {
+        const matricule = invite.matricule || 'XXXX';
+        const nom = invite.nomComplet || 'Invité(e)';
+        const table = allTables.find(t => t.familleId === invite.familleId || t.familleNom === invite.familleNom);
+        let navLink = '';
+        if (table && table.posX !== undefined && table.posX !== null) {
+            navLink = `\n📍 *Navigation vers votre table :* \n${appLien}?nav=table&id=${table.id}`;
         }
-        
-        console.log('🚀 Page de connexion parent - Redirection immédiate si déjà connecté');
+        return `🕌 *Invitation au Mariage HybriLink*
+
+Bonjour ${nom},
+
+Nous avons le plaisir de vous inviter à notre cérémonie de mariage.
+
+🔑 *Votre matricule personnel :* ${matricule}
+
+📲 *Lien d'accès :* ${appLien}
+${navLink}
+
+Veuillez utiliser ce matricule pour accéder à votre espace personnel.
+
+Nous vous attendons nombreux ! ❤️
+
+---
+*HybriLink - L'invitation digitale*`;
+    }
+
+    function envoyerWhatsapp(numero, message) {
+        const numeroFormate = formaterNumeroWhatsapp(numero);
+        if (!numeroFormate) { showToast(`Numéro invalide: ${numero}`, 'error'); return false; }
+        window.open(`https://wa.me/${numeroFormate}?text=${encodeURIComponent(message)}`, '_blank');
+        return true;
+    }
+
+    async function envoyerInvitationIndividuelle(inviteId) {
+        const invite = allInvites.find(i => i.id === inviteId);
+        if (!invite) { showToast('Invité non trouvé', 'error'); return; }
+        if (!invite.telephone) { showToast('Pas de téléphone', 'warning'); return; }
+        const appLien = document.getElementById('appLien').value.trim() || 'https://invitation-nuptiale.web.app/invite.html';
+        const message = getMessagePourInvite(invite, appLien);
+        if (envoyerWhatsapp(invite.telephone, message)) showToast(`📱 WhatsApp ouvert pour ${invite.nomComplet}`, 'success');
+    }
+
+    async function lancerDiffusionGroupe() {
+        if (selectedInvites.size === 0) { showToast('Sélectionnez au moins un invité', 'warning'); return; }
+        const appLien = document.getElementById('appLien').value.trim();
+        if (!appLien.startsWith('http://') && !appLien.startsWith('https://')) {
+            showToast('Lien invalide', 'warning');
+            return;
+        }
+        const invitesToSend = allInvites.filter(inv => selectedInvites.has(inv.id) && inv.telephone);
+        if (invitesToSend.length === 0) { showToast('Aucun invité avec téléphone', 'warning'); return; }
+        if (!confirm(`Envoyer ${invitesToSend.length} invitations WhatsApp ?`)) return;
+
+        document.getElementById('progressContainer').style.display = 'block';
+        const progressFill = document.getElementById('progressFill');
+        const progressStatus = document.getElementById('progressStatus');
+
+        let sent = 0, failed = 0;
+        for (let i = 0; i < invitesToSend.length; i++) {
+            const invite = invitesToSend[i];
+            const progress = ((i + 1) / invitesToSend.length) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressFill.textContent = `${Math.round(progress)}%`;
+            progressStatus.textContent = `Envoi à ${invite.nomComplet} (${i + 1}/${invitesToSend.length})...`;
+
+            const message = getMessagePourInvite(invite, appLien);
+            if (envoyerWhatsapp(invite.telephone, message)) sent++;
+            else failed++;
+            await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        progressFill.style.width = '100%';
+        progressFill.textContent = '100%';
+        progressStatus.textContent = `✅ Terminé : ${sent} envoyés, ${failed} échecs`;
+        showToast(`📱 ${sent} invitations envoyées`, 'success');
+        setTimeout(() => { document.getElementById('progressContainer').style.display = 'none'; }, 5000);
+    }
+
+    // =============================================================
+    // EVENEMENTS
+    // =============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🟢 Admin HybriLink chargé !');
+        chargerToutesLesDonnees();
+
+        // Menu cards
+        document.querySelectorAll('.menu-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                document.getElementById('homePage').style.display = 'none';
+                document.querySelectorAll('.content-panel').forEach(function(p) {
+                    p.classList.remove('active');
+                });
+                const panel = document.getElementById('panel-' + this.dataset.menu);
+                if (panel) panel.classList.add('active');
+                if (this.dataset.menu === 'publication') afficherInvitesSelection();
+                if (this.dataset.menu === 'plan') { chargerPlan(); dessinerApercuPlan(); }
+            });
+        });
+
+        document.getElementById('homeBrand')?.addEventListener('click', function(e) { e.preventDefault(); goHome(); });
+
+        // Tables
+        document.getElementById('btnCreerTable')?.addEventListener('click', creerTable);
+        document.getElementById('btnOuvrirPlan')?.addEventListener('click', ouvrirSelecteurPlan);
+
+        // Plan
+        document.getElementById('planUploadArea')?.addEventListener('click', function() {
+            document.getElementById('planFileInput').click();
+        });
+        document.getElementById('planFileInput')?.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) uploaderPlan(e.target.files[0]);
+        });
+        document.getElementById('planUploadArea')?.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); e.target.style.borderColor = '#003366'; e.target.style.background = '#e8f0fe'; });
+        document.getElementById('planUploadArea')?.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); e.target.style.borderColor = '#4a90e2'; e.target.style.background = '#f8f9fa'; });
+        document.getElementById('planUploadArea')?.addEventListener('drop', function(e) { e.preventDefault(); e.stopPropagation(); e.target.style.borderColor = '#4a90e2'; e.target.style.background = '#f8f9fa'; if (e.dataTransfer.files.length > 0) uploaderPlan(e.dataTransfer.files[0]); });
+        document.getElementById('btnSupprimerPlan')?.addEventListener('click', supprimerPlan);
+        document.getElementById('btnRafraichirApercu')?.addEventListener('click', function() { chargerPlan(); dessinerApercuPlan(); });
+
+        // Protocole
+        document.getElementById('btnCreerProtocole')?.addEventListener('click', creerProtocole);
+
+        // Invités
+        document.getElementById('btnCreerInvite')?.addEventListener('click', creerInvite);
+        document.getElementById('btnTelechargerModele')?.addEventListener('click', telechargerModeleExcel);
+        document.getElementById('excelUploadArea')?.addEventListener('click', function() {
+            document.getElementById('excelFileInput').click();
+        });
+        document.getElementById('excelFileInput')?.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) gererFichierExcel(e.target.files[0]);
+        });
+        document.getElementById('btnValiderExcel')?.addEventListener('click', validerImportationExcel);
+        document.getElementById('btnAnnulerExcel')?.addEventListener('click', function() { excelData = []; document.getElementById('excelPreview').style.display = 'none'; document.getElementById('excelFileInput').value = ''; });
+
+        // Familles
+        document.getElementById('btnCreerFamille')?.addEventListener('click', creerFamille);
+
+        // Parenté
+        document.getElementById('btnCreerParente')?.addEventListener('click', creerParente);
+
+        // Publication
+        document.getElementById('btnDiffuserGroupe')?.addEventListener('click', lancerDiffusionGroupe);
+        document.getElementById('btnLancerDiffusion')?.addEventListener('click', lancerDiffusionGroupe);
+        document.getElementById('btnTestLien')?.addEventListener('click', function() {
+            const lien = document.getElementById('appLien').value.trim();
+            if (lien) window.open(lien, '_blank'); else showToast('Entrez un lien', 'warning');
+        });
+        document.getElementById('btnSelectAll')?.addEventListener('click', function() {
+            allInvites.forEach(function(inv) { if (inv.telephone) selectedInvites.add(inv.id); });
+            afficherInvitesSelection();
+            showToast(selectedInvites.size + ' sélectionnés');
+        });
+        document.getElementById('btnDeselectAll')?.addEventListener('click', function() {
+            selectedInvites.clear();
+            afficherInvitesSelection();
+            showToast('Désélectionnés', 'info');
+        });
+        document.getElementById('btnSelectWithPhone')?.addEventListener('click', function() {
+            selectedInvites.clear();
+            allInvites.forEach(function(inv) { if (inv.telephone) selectedInvites.add(inv.id); });
+            afficherInvitesSelection();
+            showToast(selectedInvites.size + ' avec téléphone');
+        });
+
+        // Mise à jour aperçu message
+        document.getElementById('appLien')?.addEventListener('input', function(e) {
+            const lien = e.target.value.trim() || 'https://mon-site.com/invitation';
+            const preview = document.getElementById('previewMessage');
+            if (preview) {
+                preview.innerHTML = `
+                    <p>🕌 <strong>Invitation au Mariage HybriLink</strong></p>
+                    <p>Bonjour [Nom de l'invité],</p>
+                    <p>Nous avons le plaisir de vous inviter à notre cérémonie de mariage.</p>
+                    <p>🔑 <strong>Votre matricule :</strong> [XXXX]</p>
+                    <p>📲 <strong>Lien d'accès :</strong> ${escapeHtml(lien)}</p>
+                    <p>📍 <strong>Navigation :</strong> Cliquez sur "Navigation vers ma table" dans l'invitation</p>
+                    <p>Veuillez utiliser ce matricule pour accéder à votre espace personnel.</p>
+                    <p style="color:#666; font-size:12px; margin-top:10px;">💡 Ce message sera personnalisé pour chaque invité</p>
+                `;
+            }
+        });
+    });
+
+    // Écouteurs temps réel
+    db.collection('familles').onSnapshot(function() { chargerToutesLesDonnees(); });
+    db.collection('parentes').onSnapshot(function() { chargerToutesLesDonnees(); });
+    db.collection('invites').onSnapshot(function() { chargerToutesLesDonnees(); });
+    db.collection('tables').onSnapshot(function() { chargerToutesLesDonnees(); });
+    db.collection('protocoles').onSnapshot(function() { chargerToutesLesDonnees(); });
+    db.collection('config').doc('planSalle').onSnapshot(function() { chargerPlan(); });
+
+    console.log('✅ HybriLink Admin - Prêt');
     </script>
 </body>
 </html>
